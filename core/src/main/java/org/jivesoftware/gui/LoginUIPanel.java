@@ -145,7 +145,7 @@ import org.minidns.dnsname.DnsName;
  * The LoginDialog is used only for login in registered users into the XMPP server.
  * @author KeepToo
  */
-public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, ActionListener, FocusListener, CallbackHandler {
+public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, FocusListener, CallbackHandler {
 
     private JFrame loginDialog;
     private static final String BUTTON_PANEL = "buttonpanel"; // NOTRANS
@@ -208,12 +208,6 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         cbAnonymous.setOpaque(false);
         // btnReset.setVisible(false);
 
-        // Add button but disable the login button initially
-        cbSavePassword.addActionListener(this);
-        cbAutoLogin.addActionListener(this);
-        cbLoginInvisible.addActionListener(this);
-        cbAnonymous.addActionListener(this);
-
         // Add KeyListener
         tfUsername.addKeyListener(this);
         tfPassword.addKeyListener(this);
@@ -222,10 +216,6 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         tfPassword.addFocusListener(this);
         tfUsername.addFocusListener(this);
         tfDomain.addFocusListener(this);
-
-        // Add ActionListener
-        btnLogin.addActionListener(this);
-        btnAdvanced.addActionListener(this);
 
         otherUsers.addMouseListener(new MouseAdapter() {
             @Override
@@ -316,8 +306,6 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         if (username != null && server != null && password != null) {
             TaskEngine.getInstance().submit(this::login);
         }
-
-        btnCreateAccount.addActionListener(this);
 
         final String lockedDownURL = Default.getString(Default.HOST_NAME);
         if (ModelUtil.hasLength(lockedDownURL)) {
@@ -481,11 +469,13 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         cbSavePassword.setBackground(new java.awt.Color(255, 255, 255));
         cbSavePassword.setText("Save Password");
         cbSavePassword.setPreferredSize(new java.awt.Dimension(200, 20));
+        cbSavePassword.addActionListener(this::cbSavePasswordActionPerformed);
         pnlCheckboxes.add(cbSavePassword);
 
         cbAutoLogin.setBackground(new java.awt.Color(255, 255, 255));
         cbAutoLogin.setText("Auto login");
         cbAutoLogin.setPreferredSize(new java.awt.Dimension(200, 20));
+        cbAutoLogin.addActionListener(this::cbAutoLoginActionPerformed);
         pnlCheckboxes.add(cbAutoLogin);
 
         cbLoginInvisible.setBackground(new java.awt.Color(255, 255, 255));
@@ -496,6 +486,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         cbAnonymous.setBackground(new java.awt.Color(255, 255, 255));
         cbAnonymous.setText("Login anonymously");
         cbAnonymous.setPreferredSize(new java.awt.Dimension(200, 20));
+        cbAnonymous.addActionListener(this::cbAnonymousActionPerformed);
         pnlCheckboxes.add(cbAnonymous);
 
         pnlCenter.add(pnlCheckboxes);
@@ -517,6 +508,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         btnCreateAccount.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
         btnCreateAccount.setOpaque(false);
         btnCreateAccount.setPreferredSize(new java.awt.Dimension(95, 28));
+        btnCreateAccount.addActionListener(this::btnCreateAccountActionPerformed);
         pnlBtns.add(btnCreateAccount);
 
         btnAdvanced.setBackground(new java.awt.Color(255, 255, 255));
@@ -525,6 +517,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         btnAdvanced.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
         btnAdvanced.setOpaque(false);
         btnAdvanced.setPreferredSize(new java.awt.Dimension(110, 28));
+        btnAdvanced.addActionListener(this::btnAdvancedActionPerformed);
         pnlBtns.add(btnAdvanced);
 
         btnReset.setBackground(new java.awt.Color(255, 255, 255));
@@ -542,8 +535,45 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLoginActionPerformed(ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        // TODO add your handling code here:
+        TaskEngine.getInstance().submit(this::login);
     }//GEN-LAST:event_btnLoginActionPerformed
+
+    private void btnCreateAccountActionPerformed(ActionEvent evt) {//GEN-FIRST:event_btnCreateAccountActionPerformed
+        AccountCreationWizard createAccountPanel = new AccountCreationWizard();
+        createAccountPanel.invoke(loginDialog);
+        if (createAccountPanel.isRegistered()) {
+            tfUsername.setText(createAccountPanel.getUsernameWithoutEscape());
+            tfPassword.setText(createAccountPanel.getPassword());
+            tfDomain.setText(createAccountPanel.getServer());
+            btnLogin.setEnabled(true);
+        }
+    }//GEN-LAST:event_btnCreateAccountActionPerformed
+
+    private void btnAdvancedActionPerformed(ActionEvent evt) {//GEN-FIRST:event_btnAdvancedActionPerformed
+        final LoginSettingDialog loginSettingsDialog = new LoginSettingDialog();
+        loginSettingsDialog.invoke(loginDialog);
+        useSSO(localPref.isSSOEnabled());
+    }//GEN-LAST:event_btnAdvancedActionPerformed
+
+
+    private void cbSavePasswordActionPerformed(ActionEvent evt) {//GEN-FIRST:event_cbSavePasswordActionPerformed
+        cbAutoLogin.setEnabled(cbSavePassword.isSelected());
+        if (!cbSavePassword.isSelected()) {
+            cbAutoLogin.setSelected(false);
+        }
+    }//GEN-LAST:event_cbSavePasswordActionPerformed
+
+    private void cbAutoLoginActionPerformed(ActionEvent evt) {//GEN-FIRST:event_cbAutoLoginActionPerformed
+        if ((cbAutoLogin.isSelected() && (!localPref.isSSOEnabled()))) {
+            cbSavePassword.setSelected(true);
+        }
+    }//GEN-LAST:event_cbAutoLoginActionPerformed
+
+    private void cbAnonymousActionPerformed(ActionEvent evt) {//GEN-FIRST:event_cbAnonymousActionPerformed
+        tfUsername.setEnabled(!cbAnonymous.isSelected());
+        tfPassword.setEnabled(!cbAnonymous.isSelected());
+        validateDialog();
+    }//GEN-LAST:event_cbAnonymousActionPerformed
 
     private void tfUsernameMousePressed(MouseEvent evt) {//GEN-FIRST:event_tfUsernameMousePressed
         if (SwingUtilities.isRightMouseButton(evt)) {
@@ -895,46 +925,6 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
             throw new IllegalStateException("Must be called on the Event Dispatcher Thread (but was not)");
         }
         return cbLoginInvisible.isSelected();
-    }
-
-    /**
-     * ActionListener implementation.
-     *
-     * @param e the ActionEvent
-     */
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnCreateAccount) {
-            AccountCreationWizard createAccountPanel = new AccountCreationWizard();
-            createAccountPanel.invoke(loginDialog);
-
-            if (createAccountPanel.isRegistered()) {
-                tfUsername.setText(createAccountPanel.getUsernameWithoutEscape());
-                tfPassword.setText(createAccountPanel.getPassword());
-                tfDomain.setText(createAccountPanel.getServer());
-                btnLogin.setEnabled(true);
-            }
-        } else if (e.getSource() == btnLogin) {
-            TaskEngine.getInstance().submit(this::login);
-        } else if (e.getSource() == btnAdvanced) {
-            final LoginSettingDialog loginSettingsDialog = new LoginSettingDialog();
-            loginSettingsDialog.invoke(loginDialog);
-            useSSO(localPref.isSSOEnabled());
-        } else if (e.getSource() == cbSavePassword) {
-            cbAutoLogin.setEnabled(cbSavePassword.isSelected());
-
-            if (!cbSavePassword.isSelected()) {
-                cbAutoLogin.setSelected(false);
-            }
-        } else if (e.getSource() == cbAutoLogin) {
-            if ((cbAutoLogin.isSelected() && (!localPref.isSSOEnabled()))) {
-                cbSavePassword.setSelected(true);
-            }
-        } else if (e.getSource() == cbAnonymous) {
-            tfUsername.setEnabled(!cbAnonymous.isSelected());
-            tfPassword.setEnabled(!cbAnonymous.isSelected());
-            validateDialog();
-        }
     }
 
     private JPopupMenu getPopup() {
