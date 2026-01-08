@@ -139,7 +139,6 @@ import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 import org.minidns.dnsname.DnsName;
-import org.minidns.record.A;
 
 /**
  * Dialog to log in a user into the XMPP server.
@@ -256,7 +255,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
 
         File file = new File(Spark.getSparkUserHome(), "/user/");
         File[] userprofiles = file.listFiles();
-
+        userprofiles = userprofiles != null ? userprofiles : new File[]{};
         for (File f : userprofiles) {
             if (f.getName().contains("@")) {
                 _usernames.add(f.getName());
@@ -287,7 +286,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         cbAnonymous.setSelected(localPref.isLoginAnonymously());
         tfUsername.setEnabled(!cbAnonymous.isSelected());
         tfPassword.setEnabled(!cbAnonymous.isSelected());
-        //Add clear button for username,password and domain field
+        // Add a clear button for username, password and domain fields
         tfUsername.putClientProperty("JTextField.showClearButton",true);
         tfDomain.putClientProperty("JTextField.showClearButton",true);
         tfPassword.putClientProperty("JTextField.showClearButton",true);
@@ -338,7 +337,6 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         }
         
         setComponentsAvailable(true);
-
     }
 
     // Should be called only from the Event Dispatcher Thread.
@@ -456,14 +454,14 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         pnlInputs.setPreferredSize(new java.awt.Dimension(220, 110));
 
         tfUsername.setPreferredSize(new java.awt.Dimension(200, 30));
-        tfUsername.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
+        tfUsername.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
                 tfUsernameMouseEntered(evt);
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
+            public void mouseExited(MouseEvent evt) {
                 tfUsernameMouseExited(evt);
             }
-            public void mousePressed(java.awt.event.MouseEvent evt) {
+            public void mousePressed(MouseEvent evt) {
                 tfUsernameMousePressed(evt);
             }
         });
@@ -510,11 +508,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         btnLogin.setText("Login");
         btnLogin.setEnabled(false);
         btnLogin.setPreferredSize(new java.awt.Dimension(210, 30));
-        btnLogin.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLoginActionPerformed(evt);
-            }
-        });
+        btnLogin.addActionListener(this::btnLoginActionPerformed);
         pnlBtns.add(btnLogin);
 
         btnCreateAccount.setBackground(new java.awt.Color(255, 255, 255));
@@ -539,11 +533,7 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         btnReset.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
         btnReset.setOpaque(false);
         btnReset.setPreferredSize(new java.awt.Dimension(210, 28));
-        btnReset.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnResetActionPerformed(evt);
-            }
-        });
+        btnReset.addActionListener(this::btnResetActionPerformed);
         pnlBtns.add(btnReset);
 
         pnlCenter.add(pnlBtns);
@@ -551,25 +541,25 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Act
         add(pnlCenter, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
+    private void btnLoginActionPerformed(ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnLoginActionPerformed
 
-    private void tfUsernameMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tfUsernameMousePressed
+    private void tfUsernameMousePressed(MouseEvent evt) {//GEN-FIRST:event_tfUsernameMousePressed
         if (SwingUtilities.isRightMouseButton(evt)) {
             getPopup().show(tfUsername, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_tfUsernameMousePressed
 
-    private void tfUsernameMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tfUsernameMouseEntered
+    private void tfUsernameMouseEntered(MouseEvent evt) {//GEN-FIRST:event_tfUsernameMouseEntered
         // getPopup().show(tfUsername, evt.getX(), evt.getY());
     }//GEN-LAST:event_tfUsernameMouseEntered
 
-    private void tfUsernameMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tfUsernameMouseExited
+    private void tfUsernameMouseExited(MouseEvent evt) {//GEN-FIRST:event_tfUsernameMouseExited
         // getPopup().setVisible(false);
     }//GEN-LAST:event_tfUsernameMouseExited
 
-    private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
+    private void btnResetActionPerformed(ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
         final String url = Default.getString(Default.PASSWORD_RESET_URL);
         try {
             BrowserLauncher.openURL(url);
