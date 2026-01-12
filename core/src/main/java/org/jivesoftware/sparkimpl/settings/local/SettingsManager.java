@@ -19,12 +19,14 @@ package org.jivesoftware.sparkimpl.settings.local;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import org.jivesoftware.Spark;
-import org.jivesoftware.resource.SparkRes;
+import org.jivesoftware.resource.Default;
 import org.jivesoftware.spark.util.log.Log;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Enumeration;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -86,7 +88,22 @@ public class SettingsManager {
     }
 
     private static void save() {
-        final Properties props = localPreferences.getProperties();
+        final Properties props = new Properties();
+
+        for (Map.Entry<Object, Object> setting : localPreferences.getProperties().entrySet()) {
+            String key = (String) setting.getKey();
+            String value = (String) setting.getValue();
+            String defaultSettingVal =  Default.getString(key);
+            if (defaultSettingVal == null) {
+                props.put(key, value);
+            } else if (defaultSettingVal.isEmpty()) {
+                props.put(key, value);
+            } else if (!defaultSettingVal.equals(value)) {
+                props.put(key, value);
+            } else {
+                Log.error(defaultSettingVal);
+            }
+        }
         try {
             props.store(Files.newOutputStream(getSettingsFile().toPath()), "Spark Settings");
         } catch (Exception e) {
