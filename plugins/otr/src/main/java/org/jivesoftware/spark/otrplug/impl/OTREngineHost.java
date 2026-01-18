@@ -33,22 +33,22 @@ public class OTREngineHost implements OtrEngineHost {
     }
 
     @Override
-    public KeyPair getKeyPair(SessionID arg0) {
-        return OTRManager.getInstance().getKeyManager().loadLocalKeyPair(arg0);
+    public KeyPair getLocalKeyPair(SessionID sessionID) {
+        return OTRManager.getInstance().getKeyManager().loadLocalKeyPair(sessionID);
     }
 
     @Override
-    public OtrPolicy getSessionPolicy(SessionID arg0) {
+    public OtrPolicy getSessionPolicy(SessionID sessionID) {
         return _policy;
     }
 
     @Override
-    public void injectMessage(SessionID arg0, String arg1) {
+    public void injectMessage(SessionID sessionID, String msg) {
         String threadID = StringUtils.randomString(6);
         Message injection = StanzaBuilder.buildMessage()
             .ofType(Message.Type.chat)
             .setThread(threadID)
-            .setBody(arg1)
+            .setBody(msg)
             .build();
         injection.setTo(_chatRoom.getParticipantJID());
         injection.setFrom(SparkManager.getSessionManager().getJID());
@@ -56,20 +56,15 @@ public class OTREngineHost implements OtrEngineHost {
         {
             SparkManager.getConnection().sendStanza(injection);
         }
-        catch ( SmackException.NotConnectedException e )
+        catch (SmackException.NotConnectedException | InterruptedException e )
         {
             Log.warning( "Unable to send injection to " + injection.getTo(), e );
         }
     }
 
     @Override
-    public void showError(SessionID arg0, String arg1) {
-        _chatRoom.getTranscriptWindow().insertNotificationMessage(arg1, Color.red);
-    }
-
-    @Override
-    public void showWarning(SessionID arg0, String arg1) {
-        _chatRoom.getTranscriptWindow().insertNotificationMessage(arg1, Color.red);
+    public void showError(SessionID sessionID, String error) {
+        _chatRoom.getTranscriptWindow().insertNotificationMessage(error, Color.red);
     }
 
 }
