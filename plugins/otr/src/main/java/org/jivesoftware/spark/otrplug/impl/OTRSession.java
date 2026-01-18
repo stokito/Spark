@@ -187,9 +187,12 @@ public class OTRSession {
                         }
 
                         if (!OTRManager.getInstance().getKeyManager().isVerified( _mySessionID )) {
-                            final int n = JOptionPane.showConfirmDialog(_otrButton,
-                                    OTRResources.getString("otr.start.session.with", _remoteJID) + "\n" + OTRResources.getString("otr.key.not.verified.text") + "\n" + otrkey
-                                            + "\n" + OTRResources.getString("otr.question.verify"), OTRResources.getString("otr.key.not.verified.title"),
+                            String dialogTitle = OTRResources.getString("otr.key.not.verified.title");
+                            String dialogMessage = OTRResources.getString("otr.start.session.with", _remoteJID) + "\n" +
+                                OTRResources.getString("otr.key.not.verified.text") + "\n" +
+                                otrkey + "\n" +
+                                OTRResources.getString("otr.question.verify");
+                            int n = JOptionPane.showConfirmDialog(_otrButton, dialogMessage, dialogTitle,
                                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                             if (n == JOptionPane.YES_OPTION) {
                                 _manager.getKeyManager().verify( _mySessionID );
@@ -200,6 +203,16 @@ public class OTRSession {
                             stopSession();
                             _otrButton.setIcon(new ImageIcon(cl.getResource("otr_off.png")));
                     }
+                }
+
+                @Override
+                public void multipleInstancesDetected(SessionID sessionID) {
+                    Log.warning("multipleInstancesDetected for OTR session " + sessionID);
+                }
+
+                @Override
+                public void outgoingSessionChanged(SessionID sessionID) {
+                    Log.warning("outgoingSessionChanged for OTR session " + sessionID);
                 }
             };
             _mySession.addOtrEngineListener(_otrListener);
