@@ -27,12 +27,12 @@ import org.jivesoftware.spark.otrplug.OTRManager;
 import org.jivesoftware.spark.otrplug.impl.MyOtrKeyManager;
 import org.jivesoftware.spark.otrplug.util.OTRProperties;
 import org.jivesoftware.spark.otrplug.util.OTRResources;
+import org.jxmpp.jid.EntityFullJid;
 
 /**
  * OTR preference panel for Spark Preferences
  * 
  * @author Bergund Holger
- * 
  */
 public class OTRPrefPanel extends JPanel {
 
@@ -49,7 +49,6 @@ public class OTRPrefPanel extends JPanel {
     private OTRProperties _properties;
 
     public OTRPrefPanel() {
-
         _manager = OTRManager.getInstance();
         _keyManager = _manager.getKeyManager();
         _properties = OTRProperties.getInstance();
@@ -60,32 +59,18 @@ public class OTRPrefPanel extends JPanel {
     }
 
     private void OtrEnableSwitch() {
-        if (!_enableOTR.isSelected()) {
-            _closeSessionOff.setEnabled(false);
-            _closeSessionOnWindowClose.setEnabled(false);
-            _renewPrivateKey.setEnabled(false);
-            _keytable.setEnabled(false);
-        } else {
-            _closeSessionOff.setEnabled(true);
-            _closeSessionOnWindowClose.setEnabled(true);
-            _renewPrivateKey.setEnabled(true);
-            _keytable.setEnabled(true);
-        }
+        _closeSessionOff.setEnabled(_enableOTR.isSelected());
+        _closeSessionOnWindowClose.setEnabled(_enableOTR.isSelected());
+        _renewPrivateKey.setEnabled(_enableOTR.isSelected());
+        _keytable.setEnabled(_enableOTR.isSelected());
     }
 
     private void init() {
-
         _enableOTR = new JCheckBox();
         _enableOTR.setText(OTRResources.getString("otr.enable"));
         _enableOTR.setSelected(_properties.getIsOTREnabled());
 
-        _enableOTR.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                OtrEnableSwitch();
-            }
-        });
+        _enableOTR.addActionListener(e -> OtrEnableSwitch());
 
         _closeSessionOff = new JCheckBox();
         _closeSessionOff.setText(OTRResources.getString("otr.close.session.on.contact.off"));
@@ -104,7 +89,8 @@ public class OTRPrefPanel extends JPanel {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                SessionID mySession = new SessionID(SparkManager.getConnection().getUser(), "no one", "Scytale");
+                EntityFullJid userJid = SparkManager.getConnection().getUser();
+                SessionID mySession = new SessionID(userJid, "no one", "Scytale");
                 _manager.getKeyManager().generateLocalKeyPair(mySession);
                 _privateKey.setText(getCurrentLocalKey());
             }
@@ -117,13 +103,12 @@ public class OTRPrefPanel extends JPanel {
         _keytable = new OTRKeyTable();
 
         loadRemoteKeys();
-
     }
 
     private void loadRemoteKeys() {
-
         for (RosterEntry entry : Roster.getInstanceFor( SparkManager.getConnection() ).getEntries()) {
-            SessionID curSession = new SessionID(SparkManager.getConnection().getUser(), entry.getUser(), "Scytale");
+            EntityFullJid userJid = SparkManager.getConnection().getUser();
+            SessionID curSession = new SessionID(userJid, entry.getUser(), "Scytale");
             String remoteKey = _keyManager.getRemoteFingerprint(curSession);
             if (remoteKey != null) {
                 boolean isVerified = _keyManager.isVerified(curSession);
@@ -141,7 +126,8 @@ public class OTRPrefPanel extends JPanel {
                 if (col == 2) {
                     boolean selection = (Boolean) _keytable.getValueAt(row, col);
                     String JID = (String) _keytable.getValueAt(row, 0);
-                    SessionID curSelectedSession = new SessionID(SparkManager.getConnection().getUser(), JID, "Scytale");
+                    EntityFullJid userJid = SparkManager.getConnection().getUser();
+                    SessionID curSelectedSession = new SessionID(userJid, JID, "Scytale");
                     if (!selection) {
                         _keyManager.verify(curSelectedSession);
                     } else {
@@ -150,7 +136,6 @@ public class OTRPrefPanel extends JPanel {
                 }
             }
         });
-
     }
 
     private void buildGUI() {
@@ -166,7 +151,8 @@ public class OTRPrefPanel extends JPanel {
     }
 
     private String getCurrentLocalKey() {
-        SessionID mySession = new SessionID(SparkManager.getConnection().getUser(), "no one", "Scytale");
+        EntityFullJid userJid = SparkManager.getConnection().getUser();
+        SessionID mySession = new SessionID(userJid, "no one", "Scytale");
         String myKey = _keyManager.getLocalFingerprint(mySession);
         return myKey;
     }

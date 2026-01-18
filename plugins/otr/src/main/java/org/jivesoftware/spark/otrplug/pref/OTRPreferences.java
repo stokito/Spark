@@ -52,7 +52,6 @@ public class OTRPreferences implements Preference {
     @Override
     public void load() {
         // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -61,7 +60,6 @@ public class OTRPreferences implements Preference {
         OTRProperties.getInstance().setOTRCloseOnChatClose(pref.isCloseOnChatClose());
         OTRProperties.getInstance().setOTRCloseOnDisc(pref.isCloseOnDisc());
         OTRProperties.getInstance().save();
-
     }
 
     @Override
@@ -85,7 +83,6 @@ public class OTRPreferences implements Preference {
     @Override
     public void shutdown() {
         // TODO Auto-generated method stub
-
     }
 
 }

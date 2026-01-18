@@ -65,13 +65,11 @@ public class OTREngineHost implements OtrEngineHost {
     @Override
     public void showError(SessionID arg0, String arg1) {
         _chatRoom.getTranscriptWindow().insertNotificationMessage(arg1, Color.red);
-
     }
 
     @Override
     public void showWarning(SessionID arg0, String arg1) {
         _chatRoom.getTranscriptWindow().insertNotificationMessage(arg1, Color.red);
-
     }
 
 }

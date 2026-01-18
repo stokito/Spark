@@ -35,7 +35,6 @@ import net.java.otr4j.session.SessionID;
  * key chain
  * 
  * @author Bergunde Holger
- * 
  */
 public class MyOtrKeyManager implements OtrKeyManager {
 
@@ -54,9 +53,6 @@ public class MyOtrKeyManager implements OtrKeyManager {
 
     /**
      * Inner class, own implemented key sotrage
-     * 
-     * @author Bergunde Holger
-     * 
      */
     class DefaultPropertiesStore implements OtrKeyManagerStore {
         private final Properties properties = new Properties();
@@ -138,7 +134,6 @@ public class MyOtrKeyManager implements OtrKeyManager {
      * 
      * @param filepath
      *            file where the keys should be stored
-     * @throws IOException
      */
     public MyOtrKeyManager(String filepath) throws IOException {
         this.store = new DefaultPropertiesStore(filepath);
@@ -255,21 +250,24 @@ public class MyOtrKeyManager implements OtrKeyManager {
      *            sessionID for currect machine
      */
     public KeyPair loadLocalKeyPair(SessionID sessionID) {
-        if (sessionID == null)
+        if (sessionID == null) {
             return null;
+        }
 
         String accountID = sessionID.getAccountID();
         // Load Private Key.
         byte[] b64PrivKey = this.store.getPropertyBytes(accountID + ".privateKey");
-        if (b64PrivKey == null)
+        if (b64PrivKey == null) {
             return null;
+        }
 
         PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(b64PrivKey);
 
         // Load Public Key.
         byte[] b64PubKey = this.store.getPropertyBytes(accountID + ".publicKey");
-        if (b64PubKey == null)
+        if (b64PubKey == null) {
             return null;
+        }
 
         X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(b64PubKey);
 
@@ -294,21 +292,20 @@ public class MyOtrKeyManager implements OtrKeyManager {
     }
 
     /**
-     * Loads the public key for the specified sessionID. If there is no key
-     * stored, you will get 'null'
+     * Loads the public key for the specified sessionID.
+     * If there is no key stored, you will get 'null'
      */
     public PublicKey loadRemotePublicKey(SessionID sessionID) {
-        if (sessionID == null)
+        if (sessionID == null) {
             return null;
-
+        }
         String userID = sessionID.getUserID();
-
         byte[] b64PubKey = this.store.getPropertyBytes(userID + ".publicKey");
-        if (b64PubKey == null)
+        if (b64PubKey == null) {
             return null;
+        }
 
         X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(b64PubKey);
-
         // Generate KeyPair.
         KeyFactory keyFactory;
         try {
@@ -332,14 +329,12 @@ public class MyOtrKeyManager implements OtrKeyManager {
      *            the key which should be stored
      */
     public void savePublicKey(SessionID sessionID, PublicKey pubKey) {
-        if (sessionID == null)
+        if (sessionID == null) {
             return;
-
+        }
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(pubKey.getEncoded());
-
         String userID = sessionID.getUserID();
         this.store.setProperty(userID + ".publicKey", x509EncodedKeySpec.getEncoded());
-
         this.store.removeProperty(userID + ".publicKey.verified");
     }
 
@@ -347,32 +342,32 @@ public class MyOtrKeyManager implements OtrKeyManager {
      * Removes the verification for the specified sessionID
      */
     public void unverify(SessionID sessionID) {
-        if (sessionID == null)
+        if (sessionID == null) {
             return;
-
-        if (!isVerified(sessionID))
+        }
+        if (!isVerified(sessionID)) {
             return;
-
+        }
         this.store.removeProperty(sessionID.getUserID() + ".publicKey.verified");
-        for (OtrKeyManagerListener l : listeners)
+        for (OtrKeyManagerListener l : listeners) {
             l.verificationStatusChanged(sessionID);
-
+        }
     }
 
     /**
      * Verify the specified sessionID
      */
     public void verify(SessionID sessionID) {
-        if (sessionID == null)
+        if (sessionID == null) {
             return;
-
-        if (this.isVerified(sessionID))
+        }
+        if (this.isVerified(sessionID)) {
             return;
-
+        }
         this.store.setProperty(sessionID.getUserID() + ".publicKey.verified", true);
-
-        for (OtrKeyManagerListener l : listeners)
+        for (OtrKeyManagerListener l : listeners) {
             l.verificationStatusChanged(sessionID);
+        }
     }
 
 }

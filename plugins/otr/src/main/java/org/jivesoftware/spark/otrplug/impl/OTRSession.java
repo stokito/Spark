@@ -29,8 +29,8 @@ import net.java.otr4j.session.SessionStatus;
 import org.jivesoftware.spark.util.log.Log;
 
 /**
- * OTRSession are unique for every conversation. It handles the otrEngine for
- * the chat and controls if the chat is encrypted or not.
+ * OTRSession are unique for every conversation.
+ * It handles the otrEngine for the chat and controls if the chat is encrypted or not.
  * 
  * @author Bergunde Holger
  */
@@ -52,12 +52,9 @@ public class OTRSession {
     /**
      * OTRSession Constructor
      * 
-     * @param chatroom
-     *            chat room related to this OTR session
-     * @param myJID
-     *            my own JID
-     * @param remoteJID
-     *            the JID of the participant
+     * @param chatroom chat room related to this OTR session
+     * @param myJID my own JID
+     * @param remoteJID the JID of the participant
      */
     public OTRSession(ChatRoomImpl chatroom, String myJID, String remoteJID) {
         _chatRoom = chatroom;
@@ -69,48 +66,32 @@ public class OTRSession {
         _mySession = new SessionImpl( _mySessionID, _otrEngineHost );
 
         setUpMessageListener();
-
         createButton();
-
         // Only initialize the actionListener once
-        _otrButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (_mySession.getSessionStatus().equals(SessionStatus.ENCRYPTED)) {
-                    try
-                    {
-                        stopSession();
-                    }
-                    catch ( OtrException ex )
-                    {
-                        Log.error( "An exception occurred while tyring to stop an OTR session.", ex );
-                    }
-                } else {
-                    try
-                    {
-                        startSession();
-                    }
-                    catch ( OtrException ex )
-                    {
-                        Log.error( "An exception occurred while tyring to start an OTR session.", ex );
-                    }
+        _otrButton.addActionListener(e -> {
+            if (_mySession.getSessionStatus().equals(SessionStatus.ENCRYPTED)) {
+                try {
+                    stopSession();
+                } catch (OtrException ex) {
+                    Log.error("An exception occurred while tyring to stop an OTR session.", ex);
                 }
-
+            } else {
+                try {
+                    startSession();
+                } catch (OtrException ex) {
+                    Log.error("An exception occurred while tyring to start an OTR session.", ex);
+                }
             }
         });
-
         _otrButton.setToolTipText(OTRResources.getString("otr.chat.button.tooltip"));
-
         _OtrEnabled = OTRProperties.getInstance().getIsOTREnabled();
     }
 
     /**
-     * Maybe you want to update the chat room because it was reopend but the OTR
+     * Maybe you want to update the chat room because it was reopened but the OTR
      * session is still alive.
      * 
-     * @param chatroom
-     *            the chat room related to this OTR session
+     * @param chatroom the chat room related to this OTR session
      */
     public void updateChatRoom(ChatRoomImpl chatroom) {
         _OtrEnabled = OTRProperties.getInstance().getIsOTREnabled();
@@ -129,7 +110,7 @@ public class OTRSession {
                 String oldmsg = message.getBody();
                 if (_mySession.equals( SessionStatus.ENCRYPTED)) {
                     message.setBody(null);
-                    String[] mesg = null;
+                    String[] mesg;
                     try
                     {
                         mesg = _mySession.transformSending(oldmsg);
@@ -161,7 +142,7 @@ public class OTRSession {
                     if (_mySession.equals( SessionStatus.ENCRYPTED)) {
                         message.setBody(mesg);
                     } else {
-                        if (old.length() > 3 && old.substring(0, 4).equals("?OTR")) {
+                        if (old.startsWith("?OTR")) {
                             old = null;
                         }
                         message.setBody(old);
@@ -169,24 +150,22 @@ public class OTRSession {
                 } else if (!_OtrEnabled) {
                     String old = message.getBody();
                     message.setBody(null);
-                    if (old.length() > 3 && old.substring(0, 4).equals("?OTR")) {
+                    if (old.startsWith("?OTR")) {
                         _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.not.enabled"), Color.gray);
                     } else {
                         message.setBody(old);
                     }
                 }
-
             }
         };
         _chatRoom.addMessageEventListener(_msgEvnt);
     }
 
     private void createButton() {
-
         if (OTRProperties.getInstance().getIsOTREnabled()) {
             final ClassLoader cl = getClass().getClassLoader();
 
-            ImageIcon otricon = null;
+            ImageIcon otricon;
             if (_mySession.getSessionStatus().equals( SessionStatus.ENCRYPTED)) {
                 otricon = new ImageIcon(cl.getResource("otr_on.png"));
                 _conPanel.successfullyCon();
@@ -208,7 +187,6 @@ public class OTRSession {
                 	
                     if (_mySession.getSessionStatus().equals( SessionStatus.ENCRYPTED)) {
                         _conPanel.successfullyCon();
-
                         String otrkey = _manager.getKeyManager().getRemoteFingerprint( _mySessionID );
                         if (otrkey == null) {
                             PublicKey pubkey = _mySession.getRemotePublicKey( _mySessionID );
@@ -221,11 +199,9 @@ public class OTRSession {
                                     OTRResources.getString("otr.start.session.with", _remoteJID) + "\n" + OTRResources.getString("otr.key.not.verified.text") + "\n" + otrkey
                                             + "\n" + OTRResources.getString("otr.question.verify"), OTRResources.getString("otr.key.not.verified.title"),
                                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
                             if (n == JOptionPane.YES_OPTION) {
                                 _manager.getKeyManager().verify( _mySessionID );
                             }
-
                         }
                         _otrButton.setIcon(new ImageIcon(cl.getResource("otr_on.png")));
                     } else if (_mySession.getSessionStatus().equals( SessionStatus.FINISHED) || _mySession.getSessionStatus().equals( SessionStatus.PLAINTEXT ) {
@@ -239,7 +215,6 @@ public class OTRSession {
                             Log.error( "An exception occurred while stopping the OTR session.", e );
                         }
                     }
-
                 }
             };
             _mySession.addOtrEngineListener(_otrListener);

@@ -25,9 +25,6 @@ public class OTRResources {
 
     /**
      * Returns a string from the language file
-     * 
-     * @param propertyName
-     * @return
      */
     public static final String getString(String propertyName) {
         try {
@@ -40,9 +37,6 @@ public class OTRResources {
 
     /**
      * Returns an ImageIcon from OTR resources folder
-     * 
-     * @param fileName
-     * @return
      */
     public static ImageIcon getIcon(String fileName) {
         try {
@@ -62,9 +56,6 @@ public class OTRResources {
 
     /**
      * Returns a string with wildcards
-     * 
-     * @param propertyName
-     * @param obj
      */
     public static String getString(String propertyName, Object... obj) {
         String str = prb.getString(propertyName);

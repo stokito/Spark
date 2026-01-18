@@ -22,24 +22,24 @@ import org.jivesoftware.spark.ui.ChatRoomListenerAdapter;
 import org.jivesoftware.spark.ui.ContactItem;
 import org.jivesoftware.spark.ui.ContactItemHandler;
 import org.jivesoftware.spark.ui.rooms.ChatRoomImpl;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityFullJid;
 
 /**
- * OTRManager controls the whole OTR process. It checks if a new chat window is
- * opened and creates an OTR session if there is no available.
+ * OTRManager controls the whole OTR process.
+ * It checks if a new chat window is opened and creates an OTR session if there is no available.
  * 
  * @author Bergunde Holger
- * 
  */
-
 public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHandler {
 
     private static OTRManager singleton;
     private static Object LOCK = new Object();
-    private Map<String, OTRSession> _activeSessions = new HashMap<String, OTRSession>();
-    final ChatManager chatManager = SparkManager.getChatManager();
+    private Map<String, OTRSession> _activeSessions = new HashMap<>();
     private static MyOtrKeyManager _keyManager;
 
     private OTRManager() {
+        final ChatManager chatManager = SparkManager.getChatManager();
         chatManager.addChatRoomListener(this);
         chatManager.addContactItemHandler(this);
     }
@@ -68,9 +68,7 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
     }
 
     /**
-     * OTRManager is a sigleton. Use this method to get the instance.
-     * 
-     * @return
+     * OTRManager is a singleton. Use this method to get the instance.
      */
     public static OTRManager getInstance() {
         // Synchronize on LOCK to ensure that we don't end up creating
@@ -81,13 +79,12 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
                 singleton = controller;
                 try {
                     _keyManager = new MyOtrKeyManager(SparkManager.getUserDirectory().getPath() + "/otrkey.priv");
-                    // we should generate a local keyprint if there is no
-                    // avaiable
-                    String key = _keyManager.getLocalFingerprint(new SessionID(SparkManager.getConnection().getUser(), "none", "Scytale"));
+                    // We should generate a local key if there is no available
+                    EntityFullJid userJid = SparkManager.getConnection().getUser();
+                    String key = _keyManager.getLocalFingerprint(new SessionID(userJid, "none", "Scytale"));
                     if (key == null) {
-                        _keyManager.generateLocalKeyPair(new SessionID(SparkManager.getConnection().getUser(), "none", "Scytale"));
+                        _keyManager.generateLocalKeyPair(new SessionID(userJid, "none", "Scytale"));
                     }
-
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -101,8 +98,7 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
     /**
      * Starts the OTR session with specified JID.
      * 
-     * @param jid
-     *            participant
+     * @param jid participant
      */
     public void startOtrWithUser(String jid) {
         if (_activeSessions.containsKey(jid)) {
@@ -120,29 +116,28 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
 
     /**
      * Returns the OtrKeyManager to store and load keys
-     * 
-     * @return
      */
     public MyOtrKeyManager getKeyManager() {
         return _keyManager;
     }
 
     private OTRSession startOTRSession(ChatRoomImpl chatroom, String jid) {
-        return new OTRSession(chatroom, SparkManager.getConnection().getUser(), jid);
+        EntityFullJid userJid = SparkManager.getConnection().getUser();
+        return new OTRSession(chatroom, userJid, jid);
     }
 
     @Override
     public boolean handlePresence(ContactItem item, Presence presence) {
         if (OTRProperties.getInstance().getOTRCloseOnDisc()) {
-            if (!presence.isAvailable() && _activeSessions.containsKey(item.getJID())) {
-                _activeSessions.get(item.getJID()).stopSession();
+            if (!presence.isAvailable() && _activeSessions.containsKey(item.getJid().toString())) {
+                _activeSessions.get(item.getJid().toString()).stopSession();
             }
         }
         return false;
     }
 
     @Override
-    public Icon getIcon(String jid) {
+    public Icon getIcon(BareJid jid) {
         // TODO Auto-generated method stub
         return null;
     }
