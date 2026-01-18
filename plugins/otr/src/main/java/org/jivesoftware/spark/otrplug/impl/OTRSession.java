@@ -70,17 +70,9 @@ public class OTRSession {
         // Only initialize the actionListener once
         _otrButton.addActionListener(e -> {
             if (_mySession.getSessionStatus().equals(SessionStatus.ENCRYPTED)) {
-                try {
-                    stopSession();
-                } catch (OtrException ex) {
-                    Log.error("An exception occurred while tyring to stop an OTR session.", ex);
-                }
+                stopSession();
             } else {
-                try {
-                    startSession();
-                } catch (OtrException ex) {
-                    Log.error("An exception occurred while tyring to start an OTR session.", ex);
-                }
+                startSession();
             }
         });
         _otrButton.setToolTipText(OTRResources.getString("otr.chat.button.tooltip"));
@@ -205,15 +197,8 @@ public class OTRSession {
                         }
                         _otrButton.setIcon(new ImageIcon(cl.getResource("otr_on.png")));
                     } else if (_mySession.getSessionStatus().equals( SessionStatus.FINISHED) || _mySession.getSessionStatus().equals( SessionStatus.PLAINTEXT ) {
-                        try
-                        {
                             stopSession();
                             _otrButton.setIcon(new ImageIcon(cl.getResource("otr_off.png")));
-                        }
-                        catch ( OtrException e )
-                        {
-                            Log.error( "An exception occurred while stopping the OTR session.", e );
-                        }
                     }
                 }
             };
@@ -224,22 +209,29 @@ public class OTRSession {
     /**
      * Start the OTR session manually from outside
      */
-    public void startSession() throws OtrException
-    {
+    public void startSession() {
         _conPanel.tryToStart();
-        _mySession.startSession();
+        try {
+            _mySession.startSession();
+        } catch (OtrException e) {
+            Log.error("An exception occurred while starting an OTR session.", e);
+        }
     }
 
     /**
      * Stop the OTR session manually from outside
      */
-    public void stopSession() throws OtrException
+    public void stopSession()
     {
         _conPanel.connectionClosed();
         if (_mySession.getSessionStatus().equals( SessionStatus.ENCRYPTED)) {
             final ClassLoader cl = getClass().getClassLoader();
             _otrButton.setIcon(new ImageIcon(cl.getResource("otr_off.png")));
-            _mySession.endSession();
+            try {
+                _mySession.endSession();
+            } catch (OtrException e) {
+                Log.error( "An exception occurred while stopping the OTR session.", e);
+            }
         }
     }
 
