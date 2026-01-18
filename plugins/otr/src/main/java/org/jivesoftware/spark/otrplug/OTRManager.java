@@ -101,16 +101,19 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
      * @param jid participant
      */
     public void startOtrWithUser(String jid) {
-        if (_activeSessions.containsKey(jid)) {
-            _activeSessions.get(jid).startSession();
+        OTRSession otrSession = _activeSessions.get(jid);
+        if (otrSession != null) {
+            otrSession.startSession();
         }
     }
 
     private void createOTRSession(ChatRoomImpl chatroom, String jid) {
-        if (!_activeSessions.containsKey(jid)) {
-            _activeSessions.put(jid, startOTRSession(chatroom, jid));
+        OTRSession otrSession = _activeSessions.get(jid);
+        if (otrSession == null) {
+            otrSession = startOTRSession(chatroom, jid);
+            _activeSessions.put(jid, otrSession);
         } else {
-            _activeSessions.get(jid).updateChatRoom(chatroom);
+            otrSession.updateChatRoom(chatroom);
         }
     }
 
@@ -123,14 +126,18 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
 
     private OTRSession startOTRSession(ChatRoomImpl chatroom, String jid) {
         EntityFullJid userJid = SparkManager.getConnection().getUser();
-        return new OTRSession(chatroom, userJid, jid);
+        return new OTRSession(chatroom, userJid.toString(), jid);
     }
 
     @Override
     public boolean handlePresence(ContactItem item, Presence presence) {
+        if (presence.isAvailable()) {
+            return false;
+        }
         if (OTRProperties.getInstance().getOTRCloseOnDisc()) {
-            if (!presence.isAvailable() && _activeSessions.containsKey(item.getJid().toString())) {
-                _activeSessions.get(item.getJid().toString()).stopSession();
+            OTRSession otrSession = _activeSessions.get(item.getJid().toString());
+            if (otrSession != null) {
+                otrSession.stopSession();
             }
         }
         return false;
