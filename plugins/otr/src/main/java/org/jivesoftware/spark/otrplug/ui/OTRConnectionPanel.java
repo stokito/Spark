@@ -47,32 +47,21 @@ public class OTRConnectionPanel {
         _transcriptWindow = _chatRoom.getTranscriptWindow();
         _doc = _transcriptWindow.getStyledDocument();
         _retry = new JButton(OTRResources.getString("otr.retry"));
-        _retry.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                OTRManager.getInstance().startOtrWithUser(_chatRoom.getParticipantJID());
-
-            }
+        _retry.addActionListener(e -> {
+            OTRManager.getInstance().startOtrWithUser(_chatRoom.getParticipantJID());
         });
-
         _retry.setVisible(false);
-
     }
 
     /**
-     * Indicates that OTR is trying to establish an OTR session. This will
-     * inject a styledDocument. You have 10 seconds to approve that the
-     * connection was successful using method successfullyCon()
-     * 
+     * Indicates that OTR is trying to establish an OTR session. This will inject a styledDocument.
+     * You have 10 seconds to approve that the connection was successful using method successfullyCon()
      */
     public void tryToStart() {
         if (!_succesfull && !_waiting) {
             renewPanel();
             _icon.setImage(SparkRes.getImageIcon(SparkRes.BUSY_IMAGE).getImage());
-
             _conPanel.setVisible(true);
-
             _i = 10;
             _label.setText(OTRResources.getString("otr.try.to.connect.for.seconds", _i));
 
@@ -81,7 +70,6 @@ public class OTRConnectionPanel {
 
                 @Override
                 public void run() {
-
                     if (_i > 0 && !_succesfull) {
                         _waiting = true;
                         _label.setText(OTRResources.getString("otr.try.to.connect.for.seconds", _i));
@@ -119,13 +107,14 @@ public class OTRConnectionPanel {
      * Indicates in the transcript window, that the OTR session has been closed
      */
     public void connectionClosed() {
-        if (_succesfull) {
-            renewPanel();
-            _succesfull = false;
-            _label.setText(OTRResources.getString("otr.disconnected"));
-            _icon.setImage(SparkRes.getImageIcon(SparkRes.SMALL_STOP).getImage());
-            _conPanel.setVisible(true);
+        if (!_succesfull) {
+            return;
         }
+        renewPanel();
+        _succesfull = false;
+        _label.setText(OTRResources.getString("otr.disconnected"));
+        _icon.setImage(SparkRes.getImageIcon(SparkRes.SMALL_STOP).getImage());
+        _conPanel.setVisible(true);
     }
 
     private void decI() {
@@ -137,16 +126,18 @@ public class OTRConnectionPanel {
      * session is now encrypted
      */
     public void successfullyCon() {
-        if (!_succesfull) {
-            if (!_waiting)
-                renewPanel();
-            _retry.setVisible(false);
-            _conPanel.setVisible(true);
-            _succesfull = true;
-            _waiting = false;
-            _icon.setImage(SparkRes.getImageIcon(SparkRes.SMALL_CHECK).getImage());
-            _label.setText(OTRResources.getString("otr.successfull"));
+        if (_succesfull) {
+            return;
         }
+        if (!_waiting) {
+            renewPanel();
+        }
+        _retry.setVisible(false);
+        _conPanel.setVisible(true);
+        _succesfull = true;
+        _waiting = false;
+        _icon.setImage(SparkRes.getImageIcon(SparkRes.SMALL_CHECK).getImage());
+        _label.setText(OTRResources.getString("otr.successfull"));
     }
 
 }
