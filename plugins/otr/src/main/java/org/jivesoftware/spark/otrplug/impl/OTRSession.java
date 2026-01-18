@@ -69,7 +69,7 @@ public class OTRSession {
         createButton();
         // Only initialize the actionListener once
         _otrButton.addActionListener(e -> {
-            if (_mySession.getSessionStatus().equals(SessionStatus.ENCRYPTED)) {
+            if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
                 stopSession();
             } else {
                 startSession();
@@ -100,7 +100,7 @@ public class OTRSession {
             @Override
             public void sendingMessage(Message message) {
                 String oldmsg = message.getBody();
-                if (_mySession.equals( SessionStatus.ENCRYPTED)) {
+                if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
                     message.setBody(null);
                     String[] mesg;
                     try
@@ -131,7 +131,7 @@ public class OTRSession {
                             Log.error( "An exception occurred while receiving a message: " + old, e );
                         }
                     }
-                    if (_mySession.equals( SessionStatus.ENCRYPTED)) {
+                    if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
                         message.setBody(mesg);
                     } else {
                         if (old.startsWith("?OTR")) {
@@ -158,7 +158,7 @@ public class OTRSession {
             final ClassLoader cl = getClass().getClassLoader();
 
             ImageIcon otricon;
-            if (_mySession.getSessionStatus().equals( SessionStatus.ENCRYPTED)) {
+            if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
                 otricon = new ImageIcon(cl.getResource("otr_on.png"));
                 _conPanel.successfullyCon();
             } else {
@@ -177,7 +177,7 @@ public class OTRSession {
                 	UIManager.put("OptionPane.noButtonText", Res.getString("no"));
                 	UIManager.put("OptionPane.cancelButtonText", Res.getString("cancel"));
                 	
-                    if (_mySession.getSessionStatus().equals( SessionStatus.ENCRYPTED)) {
+                    if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
                         _conPanel.successfullyCon();
                         String otrkey = _manager.getKeyManager().getRemoteFingerprint( _mySessionID );
                         if (otrkey == null) {
@@ -199,7 +199,7 @@ public class OTRSession {
                             }
                         }
                         _otrButton.setIcon(new ImageIcon(cl.getResource("otr_on.png")));
-                    } else if (_mySession.getSessionStatus().equals( SessionStatus.FINISHED) || _mySession.getSessionStatus().equals( SessionStatus.PLAINTEXT ) {
+                    } else if (_mySession.getSessionStatus() == SessionStatus.FINISHED || _mySession.getSessionStatus() == SessionStatus.PLAINTEXT) {
                             stopSession();
                             _otrButton.setIcon(new ImageIcon(cl.getResource("otr_off.png")));
                     }
@@ -237,7 +237,7 @@ public class OTRSession {
     public void stopSession()
     {
         _conPanel.connectionClosed();
-        if (_mySession.getSessionStatus().equals( SessionStatus.ENCRYPTED)) {
+        if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
             final ClassLoader cl = getClass().getClassLoader();
             _otrButton.setIcon(new ImageIcon(cl.getResource("otr_off.png")));
             try {
