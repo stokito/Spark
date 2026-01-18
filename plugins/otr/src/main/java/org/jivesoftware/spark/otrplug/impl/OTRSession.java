@@ -172,7 +172,7 @@ public class OTRSession {
             _otrListener = new OtrEngineListener() {
 
                 @Override
-                public void sessionStatusChanged(SessionID arg0) {
+                public void sessionStatusChanged(SessionID sessionID) {
                 	UIManager.put("OptionPane.yesButtonText", Res.getString("yes"));
                 	UIManager.put("OptionPane.noButtonText", Res.getString("no"));
                 	UIManager.put("OptionPane.cancelButtonText", Res.getString("cancel"));
