@@ -17,6 +17,8 @@ import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
+import net.java.otr4j.OtrKeyManager;
+import net.java.otr4j.OtrKeyManagerImpl;
 import net.java.otr4j.session.SessionID;
 
 import org.jivesoftware.smack.roster.Roster;
@@ -24,7 +26,6 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.spark.SparkManager;
 
 import org.jivesoftware.spark.otrplug.OTRManager;
-import org.jivesoftware.spark.otrplug.impl.MyOtrKeyManager;
 import org.jivesoftware.spark.otrplug.util.OTRProperties;
 import org.jivesoftware.spark.otrplug.util.OTRResources;
 import org.jxmpp.jid.EntityFullJid;
@@ -45,7 +46,7 @@ public class OTRPrefPanel extends JPanel {
     private JButton _renewPrivateKey;
     private OTRKeyTable _keytable;
     private JTextField _privateKey;
-    private MyOtrKeyManager _keyManager;
+    private OtrKeyManager _keyManager;
     private OTRProperties _properties;
 
     public OTRPrefPanel() {
@@ -90,7 +91,7 @@ public class OTRPrefPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 EntityFullJid userJid = SparkManager.getConnection().getUser();
-                SessionID mySession = new SessionID(userJid, "no one", "Scytale");
+                SessionID mySession = new SessionID(userJid.toString(), "no one", "Scytale");
                 _manager.getKeyManager().generateLocalKeyPair(mySession);
                 _privateKey.setText(getCurrentLocalKey());
             }
@@ -108,11 +109,11 @@ public class OTRPrefPanel extends JPanel {
     private void loadRemoteKeys() {
         for (RosterEntry entry : Roster.getInstanceFor( SparkManager.getConnection() ).getEntries()) {
             EntityFullJid userJid = SparkManager.getConnection().getUser();
-            SessionID curSession = new SessionID(userJid, entry.getUser(), "Scytale");
+            SessionID curSession = new SessionID(userJid.toString(), entry.getUser(), "Scytale");
             String remoteKey = _keyManager.getRemoteFingerprint(curSession);
             if (remoteKey != null) {
                 boolean isVerified = _keyManager.isVerified(curSession);
-                _keytable.addEntry(entry.getUser(), remoteKey, isVerified);
+                _keytable.addEntry(entry.getJid().toString(), remoteKey, isVerified);
             }
         }
 
@@ -127,7 +128,7 @@ public class OTRPrefPanel extends JPanel {
                     boolean selection = (Boolean) _keytable.getValueAt(row, col);
                     String JID = (String) _keytable.getValueAt(row, 0);
                     EntityFullJid userJid = SparkManager.getConnection().getUser();
-                    SessionID curSelectedSession = new SessionID(userJid, JID, "Scytale");
+                    SessionID curSelectedSession = new SessionID(userJid.toString(), JID, "Scytale");
                     if (!selection) {
                         _keyManager.verify(curSelectedSession);
                     } else {
@@ -152,7 +153,7 @@ public class OTRPrefPanel extends JPanel {
 
     private String getCurrentLocalKey() {
         EntityFullJid userJid = SparkManager.getConnection().getUser();
-        SessionID mySession = new SessionID(userJid, "no one", "Scytale");
+        SessionID mySession = new SessionID(userJid.toString(), "no one", "Scytale");
         String myKey = _keyManager.getLocalFingerprint(mySession);
         return myKey;
     }

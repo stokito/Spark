@@ -15,7 +15,7 @@ import org.jivesoftware.spark.otrplug.util.OTRResources;
 
 /**
  * OTRKeyTable displays a key table.
- * You can add keys using the addEntry() mathod
+ * You can add keys using the addEntry() method
  * 
  * @author Bergunde Holger
  */

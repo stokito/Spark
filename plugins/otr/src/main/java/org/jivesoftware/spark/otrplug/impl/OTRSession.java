@@ -13,6 +13,8 @@ import net.java.otr4j.*;
 import net.java.otr4j.session.Session;
 import net.java.otr4j.session.SessionImpl;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.MessageBuilder;
+import org.jivesoftware.spark.ChatManager;
 import org.jivesoftware.spark.otrplug.OTRManager;
 import org.jivesoftware.spark.otrplug.ui.OTRConnectionPanel;
 import org.jivesoftware.spark.otrplug.util.OTRProperties;
@@ -36,6 +38,7 @@ import org.jivesoftware.spark.util.log.Log;
  */
 public class OTRSession {
 
+    private static final OtrPolicyImpl OTR_POLICY = new OtrPolicyImpl(OtrPolicy.ALLOW_V2 | OtrPolicy.ALLOW_V3 | OtrPolicy.ERROR_START_AKE);
     private ChatRoomImpl _chatRoom;
     private String _myJID;
     private String _remoteJID;
@@ -60,7 +63,7 @@ public class OTRSession {
         _chatRoom = chatroom;
         _myJID = myJID;
         _remoteJID = remoteJID;
-        _otrEngineHost = new OTREngineHost(new OtrPolicyImpl(OtrPolicy.ALLOW_V2 | OtrPolicy.ERROR_START_AKE), _chatRoom);
+        _otrEngineHost = new OTREngineHost(OTR_POLICY, _chatRoom);
         _mySessionID = new SessionID( _myJID, _remoteJID, "Scytale");
 
         _mySession = new SessionImpl( _mySessionID, _otrEngineHost );
@@ -98,54 +101,54 @@ public class OTRSession {
         _msgEvnt = new MessageEventListener() {
 
             @Override
-            public void sendingMessage(Message message) {
-                String oldmsg = message.getBody();
+            public void sendingMessage(MessageBuilder message) {
+                String msgBody = message.getBody();
+                if (msgBody == null) {
+                    return;
+                }
                 if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
-                    message.setBody(null);
-                    String[] mesg;
                     try
                     {
-                        mesg = _mySession.transformSending(oldmsg);
+                        String[] mesg = _mySession.transformSending(msgBody);
                         message.setBody( String.join( "", mesg ) );
                     }
                     catch ( OtrException e )
                     {
-                        Log.error( "An exception occurred while trying to send a message: " + oldmsg, e );
+//                        message.setBody(""); //TODO clear message
+                        Log.error( "An exception occurred while trying to send a message: " + msgBody, e );
                     }
                 }
             }
 
             @Override
-            public void receivingMessage(Message message) {
-                if (message.getBody() != null && _OtrEnabled) {
-                    String old = message.getBody();
-                    message.setBody(null);
-                    String mesg = null;
-                    if (old.length() > 2) {
+            public void receivingMessage(MessageBuilder message) {
+                String msgBody = message.getBody();
+                if (msgBody == null) {
+                    return;
+                }
+                if (_OtrEnabled) {
+                    if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
                         try
                         {
-                            mesg = _mySession.transformReceiving(old);
+                            String mesg = _mySession.transformReceiving(msgBody);
+                            message.setBody(mesg);
                         }
                         catch ( OtrException e )
                         {
-                            Log.error( "An exception occurred while receiving a message: " + old, e );
+//                            message.setBody(""); //TODO clear message
+                            _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.failed.to.decode"), ChatManager.ERROR_COLOR);
+                            Log.error( "An exception occurred while receiving a message: " + msgBody, e );
+                        }
+                    } else {
+                        if (msgBody.startsWith("?OTR")) {
+                            _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.not.started"), ChatManager.ERROR_COLOR);
+//                            message.setBody(""); //TODO clear message
                         }
                     }
-                    if (_mySession.getSessionStatus() == SessionStatus.ENCRYPTED) {
-                        message.setBody(mesg);
-                    } else {
-                        if (old.startsWith("?OTR")) {
-                            old = null;
-                        }
-                        message.setBody(old);
-                    }
-                } else if (!_OtrEnabled) {
-                    String old = message.getBody();
-                    message.setBody(null);
-                    if (old.startsWith("?OTR")) {
-                        _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.not.enabled"), Color.gray);
-                    } else {
-                        message.setBody(old);
+                } else {
+                    if (msgBody.startsWith("?OTR")) {
+//                        message.setBody(""); //TODO clear message
+                        _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.not.enabled"), ChatManager.NOTIFICATION_COLOR);
                     }
                 }
             }
@@ -181,7 +184,7 @@ public class OTRSession {
                         _conPanel.successfullyCon();
                         String otrkey = _manager.getKeyManager().getRemoteFingerprint( _mySessionID );
                         if (otrkey == null) {
-                            PublicKey pubkey = _mySession.getRemotePublicKey( _mySessionID );
+                            PublicKey pubkey = _mySession.getRemotePublicKey( _mySession.getReceiverInstanceTag() );
                             _manager.getKeyManager().savePublicKey( _mySessionID, pubkey);
                             otrkey = _manager.getKeyManager().getRemoteFingerprint( _mySessionID );
                         }
