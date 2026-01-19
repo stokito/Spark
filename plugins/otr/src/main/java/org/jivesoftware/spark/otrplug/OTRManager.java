@@ -8,13 +8,14 @@ import java.util.Map;
 
 import javax.swing.Icon;
 
+import net.java.otr4j.OtrKeyManager;
+import net.java.otr4j.OtrKeyManagerImpl;
 import net.java.otr4j.session.SessionID;
 
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.spark.ChatManager;
 import org.jivesoftware.spark.SparkManager;
 
-import org.jivesoftware.spark.otrplug.impl.MyOtrKeyManager;
 import org.jivesoftware.spark.otrplug.impl.OTRSession;
 import org.jivesoftware.spark.otrplug.util.OTRProperties;
 import org.jivesoftware.spark.ui.ChatRoom;
@@ -36,7 +37,7 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
     private static OTRManager singleton;
     private static Object LOCK = new Object();
     private Map<String, OTRSession> _activeSessions = new HashMap<>();
-    private static MyOtrKeyManager _keyManager;
+    private static OtrKeyManagerImpl _keyManager;
 
     private OTRManager() {
         final ChatManager chatManager = SparkManager.getChatManager();
@@ -48,7 +49,7 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
     public void chatRoomOpened(ChatRoom room) {
         super.chatRoomOpened(room);
         if (room instanceof ChatRoomImpl) {
-            createOTRSession((ChatRoomImpl) room, ((ChatRoomImpl) room).getParticipantJID());
+            createOTRSession((ChatRoomImpl) room, ((ChatRoomImpl) room).getParticipantJID().toString());
         }
     }
 
@@ -58,10 +59,10 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
         if (OTRProperties.getInstance().getOTRCloseOnChatClose()) {
             if (room instanceof ChatRoomImpl) {
                 ChatRoomImpl myroom = (ChatRoomImpl) room;
-                if (_activeSessions.containsKey(myroom.getParticipantJID())) {
-                    OTRSession searchedSession = _activeSessions.get(myroom.getParticipantJID());
+                OTRSession searchedSession = _activeSessions.get(myroom.getParticipantJID().toString());
+                if (searchedSession != null) {
                     searchedSession.stopSession();
-                    _activeSessions.remove(myroom.getParticipantJID());
+                    _activeSessions.remove(myroom.getParticipantJID().toString());
                 }
             }
         }
@@ -78,12 +79,12 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
                 OTRManager controller = new OTRManager();
                 singleton = controller;
                 try {
-                    _keyManager = new MyOtrKeyManager(SparkManager.getUserDirectory().getPath() + "/otrkey.priv");
+                    _keyManager = new OtrKeyManagerImpl(SparkManager.getUserDirectory().getPath() + "/otrkey.priv");
                     // We should generate a local key if there is no available
                     EntityFullJid userJid = SparkManager.getConnection().getUser();
-                    String key = _keyManager.getLocalFingerprint(new SessionID(userJid, "none", "Scytale"));
+                    String key = _keyManager.getLocalFingerprint(new SessionID(userJid.toString(), "none", "Scytale"));
                     if (key == null) {
-                        _keyManager.generateLocalKeyPair(new SessionID(userJid, "none", "Scytale"));
+                        _keyManager.generateLocalKeyPair(new SessionID(userJid.toString(), "none", "Scytale"));
                     }
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
@@ -120,7 +121,7 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
     /**
      * Returns the OtrKeyManager to store and load keys
      */
-    public MyOtrKeyManager getKeyManager() {
+    public OtrKeyManager getKeyManager() {
         return _keyManager;
     }
 

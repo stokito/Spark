@@ -33,7 +33,6 @@ public class OTRPreferences implements Preference {
 
     @Override
     public String getListName() {
-
         return OTRResources.getString("otr.list.entry");
     }
 
