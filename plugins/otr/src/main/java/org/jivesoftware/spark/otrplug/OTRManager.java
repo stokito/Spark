@@ -35,8 +35,8 @@ import org.jxmpp.jid.EntityFullJid;
 public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHandler {
 
     private static OTRManager singleton;
-    private static Object LOCK = new Object();
-    private Map<String, OTRSession> _activeSessions = new HashMap<>();
+    private static final Object LOCK = new Object();
+    private final Map<String, OTRSession> _activeSessions = new HashMap<>();
     private static OtrKeyManagerImpl _keyManager;
 
     private OTRManager() {
@@ -72,12 +72,10 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
      * OTRManager is a singleton. Use this method to get the instance.
      */
     public static OTRManager getInstance() {
-        // Synchronize on LOCK to ensure that we don't end up creating
-        // two singletons.
+        // Synchronize on LOCK to ensure that we don't end up creating two singletons.
         synchronized (LOCK) {
-            if (null == singleton) {
-                OTRManager controller = new OTRManager();
-                singleton = controller;
+            if (singleton == null) {
+                singleton = new OTRManager();
                 try {
                     _keyManager = new OtrKeyManagerImpl(SparkManager.getUserDirectory().getPath() + "/otrkey.priv");
                     // We should generate a local key if there is no available
@@ -90,7 +88,6 @@ public class OTRManager extends ChatRoomListenerAdapter implements ContactItemHa
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                return controller;
             }
         }
         return singleton;
