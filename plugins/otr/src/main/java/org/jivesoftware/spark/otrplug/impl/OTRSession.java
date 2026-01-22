@@ -7,6 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import net.java.otr4j.*;
+import net.java.otr4j.io.SerializationConstants;
 import net.java.otr4j.session.Session;
 import net.java.otr4j.session.SessionImpl;
 
@@ -107,7 +108,11 @@ public class OTRSession {
                     try
                     {
                         String[] mesg = _mySession.transformSending(msgBody);
-                        message.setBody( String.join( "", mesg ) );
+                        if (mesg != null) {
+                            message.setBody(String.join("", mesg));
+                        } else {
+//                        message.setBody(""); //TODO clear message
+                        }
                     }
                     catch ( OtrException e )
                     {
@@ -128,7 +133,9 @@ public class OTRSession {
                         try
                         {
                             String mesg = _mySession.transformReceiving(msgBody);
-                            message.setBody(mesg);
+                            if (mesg != null) {
+                                message.setBody(mesg);
+                            }
                         }
                         catch ( OtrException e )
                         {
@@ -137,13 +144,21 @@ public class OTRSession {
                             Log.error( "An exception occurred while receiving a message: " + msgBody, e );
                         }
                     } else {
-                        if (msgBody.startsWith("?OTR")) {
+                        if (msgBody.startsWith(SerializationConstants.HEAD)) {
+                            try {
+                                String mesg = _mySession.transformReceiving(msgBody);
+                                if (mesg != null) {
+                                    message.setBody(mesg);
+                                }
+                            } catch (OtrException e) {
+                                Log.error("An exception occurred while receiving a message: " + msgBody, e);
+                            }
                             _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.not.started"), ChatManager.ERROR_COLOR);
 //                            message.setBody(""); //TODO clear message
                         }
                     }
                 } else {
-                    if (msgBody.startsWith("?OTR")) {
+                    if (msgBody.startsWith(SerializationConstants.HEAD)) {
 //                        message.setBody(""); //TODO clear message
                         _chatRoom.getTranscriptWindow().insertNotificationMessage(OTRResources.getString("otr.not.enabled"), ChatManager.NOTIFICATION_COLOR);
                     }
