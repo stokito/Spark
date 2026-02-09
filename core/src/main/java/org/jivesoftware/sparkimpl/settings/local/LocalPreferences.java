@@ -79,7 +79,7 @@ public class LocalPreferences {
 	 * @param password
 	 *            sets encrypted password for a room.
 	 */
-    public void setGroupChatPassword(String roomName, String password) throws Exception {
+    public void setGroupChatPassword(String roomName, String password) {
         String pw = Encryptor.encrypt(password);
         props.setProperty(roomName, pw);
 	}
@@ -156,27 +156,18 @@ public class LocalPreferences {
 
 	/**
 	 * returns the password for an encrypted jid
-	 * @param barejid
-	 * @return
 	 */
 	public String getPasswordForUser(String barejid)
 	{
-	    try {
 		String pw = "password"+Encryptor.encrypt(barejid);
 		return Encryptor.decrypt(props.getProperty(pw));
-	    } catch(Exception e){
-		return null;
-	    }
 	}
 
 	/**
 	 * Sets the password for barejid<br>
 	 * both will be encrypted
-	 * @param barejid
-	 * @param password
-	 * @throws Exception
 	 */
-	public void setPasswordForUser(String barejid, String password) throws Exception
+    public void setPasswordForUser(String barejid, String password)
 	{
 	    String user = "password"+Encryptor.encrypt(barejid);
 	    String pw = Encryptor.encrypt(password);
@@ -215,13 +206,9 @@ public class LocalPreferences {
 
             // The value of the property is an encrypted value.
             .filter( name -> {
-                try {
-                    final String value = props.getProperty(name);
-                    Encryptor.decrypt(value);
-                    return true;
-                } catch (Exception e) {
-                    return false;
-                }
+                final String value = props.getProperty(name);
+                String decrypted = Encryptor.decrypt(value);
+                return decrypted != null;
             })
 
             // The remainder of the property name is an encrypted JID

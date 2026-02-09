@@ -51,12 +51,20 @@ public class Encryptor {
         }
     }
 
-    public static String encrypt(String string) throws Exception {
-        byte[] utf8 = string.getBytes(StandardCharsets.UTF_8);
+    public static String encrypt(String string) {
+        try {
+            byte[] utf8 = string.getBytes(StandardCharsets.UTF_8);
 
-        // Encrypt
-        byte[] enc = ecipher.doFinal(utf8);
-        return Base64.getEncoder().encodeToString(enc);
+            // Encrypt
+            byte[] enc;
+            synchronized (ecipher) {
+                enc = ecipher.doFinal(utf8);
+            }
+            return Base64.getEncoder().encodeToString(enc);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            Log.error(e);
+            return null;
+        }
     }
 
     public static String decrypt(String string) {
@@ -73,8 +81,11 @@ public class Encryptor {
         byte[] dec = Base64.getDecoder().decode(string);
 
         // Decrypt
-        byte[] utf8 = dcipher.doFinal(dec);
 
+        byte[] utf8;
+        synchronized (dcipher) {
+            utf8 = dcipher.doFinal(dec);
+        }
         // Decode using utf-8
         return new String(utf8, StandardCharsets.UTF_8);
     }

@@ -943,11 +943,8 @@ public class LoginUIPanel extends javax.swing.JPanel implements KeyListener, Foc
                 tfUsername.setText(username);
                 tfDomain.setText(host);
 
-                try {
                     String passwordForUser = localPref.getPasswordForUser(getBareJid());
                     tfPassword.setText(passwordForUser);
-                } catch (Exception ignored) {
-                }
                 validateDialog();
             });
 
