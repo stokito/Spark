@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.game.reversi;
+package org.jivesoftware.game.reversi.packet;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.XmlEnvironment;
@@ -54,8 +54,6 @@ public class GameForfeit implements ExtensionElement {
 
     /**
      * Returns the game ID that this forfeit pertains to.
-     *
-     * @return the game ID.
      */
     public int getGameID() {
         return gameID;
@@ -63,8 +61,6 @@ public class GameForfeit implements ExtensionElement {
 
     /**
      * Sets the game ID that this forfeit pertains to.
-     *
-     * @param gameID the game ID.
      */
     public void setGameID(int gameID) {
         this.gameID = gameID;

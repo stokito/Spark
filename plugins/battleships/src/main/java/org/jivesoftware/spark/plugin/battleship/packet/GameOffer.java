@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.game.reversi;
+package org.jivesoftware.spark.plugin.battleship.packet;
+
+import java.io.IOException;
+import java.util.Random;
 
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IqData;
@@ -23,67 +26,47 @@ import org.jivesoftware.smack.xml.XmlPullParser;
 import org.jivesoftware.smack.xml.XmlPullParserException;
 import org.jxmpp.JxmppContext;
 
-import java.io.IOException;
-import java.util.Random;
+import javax.xml.namespace.QName;
 
 /**
- * An IQ packet that's an offer to start a new Reversi game. The offer indicates whether the player
- * making the offer will be the starting player (black). The starting player is selected randomly
- * by default, which is recommended.
+ * The Game Offer Packet to start a new game.
+ * The offer indicates whether the player making the offer will be the starting player.
+ * The starting player is selected randomly by default, which is recommended.
  *
- * @author Matt Tucker
+ * @author Wolf Posdorfer
  */
 public class GameOffer extends IQ {
-    public static final String ELEMENT_NAME = "reversi";
-    public static final String NAMESPACE = "http://jivesoftware.org/protocol/game/reversi";
+    public static final String ELEMENT_NAME = "battleship";
+    public static final String NAMESPACE = "http://jabber.org/protocol/games/battleship";
+    public static final QName QNAME = new QName(NAMESPACE, ELEMENT_NAME);
 
-    private static final Random random = new Random();
     private int gameID;
 
+    /**
+     * The user making the game invitation is the starting player.
+     */
     private boolean startingPlayer;
 
-    /**
-     * Constructs a new game offer with a random game ID and random value for the starting player.
-     */
     public GameOffer() {
         super(ELEMENT_NAME, NAMESPACE);
         // Randomly choose if the user making the game offer will be the starting player (black).
+        Random random = new Random();
         startingPlayer = random.nextBoolean();
         gameID = Math.abs(random.nextInt());
     }
 
-    /**
-     * Returns the game ID.
-     *
-     * @return the game ID.
-     */
     public int getGameID() {
         return gameID;
     }
 
-    /**
-     * Sets the game ID.
-     *
-     * @param gameID the game ID.
-     */
     public void setGameID(int gameID) {
         this.gameID = gameID;
     }
 
-    /**
-     * Returns true if the user making the game invitation is the starting player.
-     *
-     * @return true if the user making the game invite is the starting player.
-     */
     public boolean isStartingPlayer() {
         return startingPlayer;
     }
 
-    /**
-     * Sets whether the user making the game invitation is the starting player.
-     *
-     * @param startingPlayer true if the user making the game invite is the starting player.
-     */
     public void setStartingPlayer(boolean startingPlayer) {
         this.startingPlayer = startingPlayer;
     }
@@ -91,10 +74,11 @@ public class GameOffer extends IQ {
     @Override
     protected IQChildElementXmlStringBuilder getIQChildElementBuilder(IQChildElementXmlStringBuilder buf) {
         buf.rightAngleBracket();
-        buf.append("<" + ELEMENT_NAME + " xmlns=\"" + NAMESPACE + "\">");
-        buf.element("gameID", String.valueOf(gameID));
-        buf.element("startingPlayer", String.valueOf(startingPlayer));
-        buf.append("</" + ELEMENT_NAME + ">");
+        if (getType() == IQ.Type.get) {
+            buf.element("gameID", String.valueOf(gameID));
+            buf.element("startingPlayer", String.valueOf(startingPlayer));
+            buf.append(getExtensions());
+        }
         return buf;
     }
 
@@ -104,9 +88,8 @@ public class GameOffer extends IQ {
         }
 
         @Override
-        public GameOffer parse(XmlPullParser parser, int i, IqData iqData, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+        public GameOffer parse(XmlPullParser parser, int initialDepth, IqData iqData, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
             final GameOffer gameOffer = new GameOffer();
-
             boolean done = false;
             while (!done) {
                 XmlPullParser.Event eventType = parser.next();
@@ -118,14 +101,11 @@ public class GameOffer extends IQ {
                         boolean startingPlayer = Boolean.parseBoolean(parser.nextText());
                         gameOffer.setStartingPlayer(startingPlayer);
                     }
-                } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
-                    if (parser.getName().equals(ELEMENT_NAME)) {
-                        done = true;
-                    }
+                } else if (eventType == XmlPullParser.Event.END_ELEMENT && parser.getName().equals(ELEMENT_NAME)) {
+                    done = true;
                 }
             }
             return gameOffer;
         }
-
     }
 }

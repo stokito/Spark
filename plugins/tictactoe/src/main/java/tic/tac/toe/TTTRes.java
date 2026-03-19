@@ -25,9 +25,6 @@ import javax.swing.*;
 
 /**
  * Resource Bundle for TicTacToe
- *
- * @author wolf.posdorfer
- * @version 16.06.2011
  */
 public class TTTRes {
     private static ClassLoader cl = Mark.class.getClassLoader();

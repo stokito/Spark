@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2004-2011 Jive Software. All rights reserved.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package tic.tac.toe.packet;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
@@ -10,8 +25,13 @@ import org.jxmpp.JxmppContext;
 import javax.xml.namespace.QName;
 import java.io.IOException;
 
-public class InvalidMove implements ExtensionElement {
-    public static final String ELEMENT_NAME = "ttt-invalid";
+/**
+ * The Move Packet extension
+ *
+ * @author Wolf Posdorfer
+ */
+public class Move implements ExtensionElement {
+    public static final String ELEMENT_NAME = "ttt-move";
     public static final String NAMESPACE = "tictactoe";
     public static final QName QNAME = new QName(NAMESPACE, ELEMENT_NAME);
 
@@ -29,6 +49,9 @@ public class InvalidMove implements ExtensionElement {
         return NAMESPACE;
     }
 
+    /**
+     * Returns the game ID that this move pertains to.
+     */
     public int getGameID() {
         return gameID;
     }
@@ -41,16 +64,16 @@ public class InvalidMove implements ExtensionElement {
         return posX;
     }
 
+    public void setPositionX(int posX) {
+        this.posX = posX;
+    }
+
     public int getPositionY() {
         return posY;
     }
 
-    public void setPositionX(int x) {
-        posX = x;
-    }
-
-    public void setPositionY(int y) {
-        posY = y;
+    public void setPositionY(int posY) {
+        this.posY = posY;
     }
 
     @Override
@@ -62,25 +85,26 @@ public class InvalidMove implements ExtensionElement {
             + "</" + ELEMENT_NAME + ">";
     }
 
-    public static class Provider extends ExtensionElementProvider<InvalidMove> {
+    public static class Provider extends ExtensionElementProvider<Move> {
         @Override
-        public InvalidMove parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
-            final InvalidMove gameMove = new InvalidMove();
+        public Move parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+            final Move move = new Move();
             boolean done = false;
             while (!done) {
                 final XmlPullParser.Event eventType = parser.next();
+
                 if (eventType == XmlPullParser.Event.START_ELEMENT) {
                     if ("gameID".equals(parser.getName())) {
                         final int gameID = Integer.parseInt(parser.nextText());
-                        gameMove.setGameID(gameID);
+                        move.setGameID(gameID);
                     }
                     if ("positionX".equals(parser.getName())) {
                         final int position = Integer.parseInt(parser.nextText());
-                        gameMove.setPositionX(position);
+                        move.setPositionX(position);
                     }
                     if ("positionY".equals(parser.getName())) {
                         final int position = Integer.parseInt(parser.nextText());
-                        gameMove.setPositionY(position);
+                        move.setPositionY(position);
                     }
                 } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
                     if (ELEMENT_NAME.equals(parser.getName())) {
@@ -88,7 +112,7 @@ public class InvalidMove implements ExtensionElement {
                     }
                 }
             }
-            return gameMove;
+            return move;
         }
     }
 }

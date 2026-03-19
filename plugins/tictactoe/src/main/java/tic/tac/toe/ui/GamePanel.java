@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2004-2011 Jive Software. All rights reserved.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,11 +21,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.filter.StanzaExtensionFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.StanzaBuilder;
-import org.jivesoftware.smackx.jiveproperties.packet.JivePropertiesExtension;
 import org.jivesoftware.spark.SparkManager;
 import org.jivesoftware.spark.ui.ChatRoom;
 import org.jivesoftware.spark.ui.ShakeWindow;
@@ -35,60 +33,37 @@ import tic.tac.toe.GameBoard;
 import tic.tac.toe.Mark;
 import tic.tac.toe.TTTRes;
 import tic.tac.toe.packet.InvalidMove;
-import tic.tac.toe.packet.MovePacket;
+import tic.tac.toe.packet.Move;
 
 /**
- * Holds the GameBoard and the Playerdisplay
- * 
- * @author wolf.posdorfer
- * @version 16.06.2011
+ * Holds the GameBoard and the Player display
  */
 public class GamePanel extends JPanel {
-
-    private static final long serialVersionUID = 5481864290352375841L;
-
     private final GameBoardPanel _gameboardpanel;
-
     private final PlayerDisplay _playerdisplay;
-
     private final Mark me;
-
     private final GameBoard _gameboard;
-
-    private final XMPPConnection _connection;
-
     private final int _gameID;
-
     private final EntityFullJid _opponent;
     private final JFrame _frame;
 
-    public GamePanel(XMPPConnection connection, final int gameID,
-	    boolean imStarting, EntityFullJid opponentJID, JFrame frame) {
-	
-	_frame = frame;
+    public GamePanel(final int gameID, boolean imStarting, EntityFullJid opponentJID, JFrame frame) {
+        _frame = frame;
+        _opponent = opponentJID;
 
-	_opponent = opponentJID;
+        _gameID = gameID;
+        _gameboard = new GameBoard();
+        _gameboardpanel = new GameBoardPanel(this);
 
-	_gameID = gameID;
-	_gameboard = new GameBoard();
-	_connection = connection;
-	_gameboardpanel = new GameBoardPanel(this);
+        me = imStarting ? Mark.X : Mark.O;
+        _playerdisplay = new PlayerDisplay(me, opponentJID);
 
-	if (imStarting) {
-	    me = Mark.X;
-	} else {
-	    me = Mark.O;
-	}
+        setLayout(new BorderLayout());
 
-	_playerdisplay = new PlayerDisplay(me, opponentJID);
-
-	setLayout(new BorderLayout());
-
-	add(_gameboardpanel, BorderLayout.CENTER);
-	add(_playerdisplay, BorderLayout.SOUTH);
-        _connection.addAsyncStanzaListener(stanza -> {
-
-            MovePacket move = stanza.getExtension(MovePacket.class);
+        add(_gameboardpanel, BorderLayout.CENTER);
+        add(_playerdisplay, BorderLayout.SOUTH);
+        SparkManager.getConnection().addAsyncStanzaListener(stanza -> {
+            Move move = stanza.getExtension(Move.class);
             if (move.getGameID() == _gameID) {
                 if (_gameboard.isValidMove(getYourMark(), move.getPositionX(), move.getPositionY())) {
                     _gameboardpanel.placeMark(getYourMark(), move.getPositionX(), move.getPositionY());
@@ -98,19 +73,19 @@ public class GamePanel extends JPanel {
                     inval.setPositionX(move.getPositionX());
                     inval.setPositionY(move.getPositionY());
                     Message message = StanzaBuilder.buildMessage()
+                        .to(_opponent)
                         .addExtension(inval)
                         .build();
-                    message.setTo(_opponent);
-                    _connection.sendStanza(message);
+                    SparkManager.getConnection().sendStanza(message);
 
                     ChatRoom cr = SparkManager.getChatManager().getChatRoom(_opponent.asEntityBareJid());
                     cr.getTranscriptWindow().insertCustomText(_opponent + "seems to be cheating\n" +
                         "He tried placing a wrong Move", true, false, Color.red);
                 }
             }
-        }, new StanzaExtensionFilter(MovePacket.ELEMENT_NAME, MovePacket.NAMESPACE));
+        }, new StanzaExtensionFilter(Move.ELEMENT_NAME, Move.NAMESPACE));
 
-        _connection.addAsyncStanzaListener(stanza -> {
+        SparkManager.getConnection().addAsyncStanzaListener(stanza -> {
             //InvalidMove im = packet.getExtension(InvalidMove.class);
             ChatRoom cr = SparkManager.getChatManager().getChatRoom(_opponent.asEntityBareJid());
             cr.getTranscriptWindow().insertCustomText("You seem to be Cheating\n" +
@@ -121,94 +96,68 @@ public class GamePanel extends JPanel {
 
     }
 
-    public PlayerDisplay getPlayerDisplay() {
-	return _playerdisplay;
-    }
-
-    public GameBoardPanel getGameBoardPanel() {
-	return _gameboardpanel;
-    }
-
     /**
      * being called from GameBoardPanel, places the Mark on the Logical Board
      * and sends the Move if it was one
-     * 
-     * @param m
-     * @param x
-     * @param y
      */
     public void onGameBoardPlaceMark(Mark m, int x, int y) {
+        _gameboard.placeMark(x, y);
+        _playerdisplay.setCurrentPlayer(_gameboard.getCurrentPlayer());
 
-	_gameboard.placeMark(x, y);
-	_playerdisplay.setCurrentPlayer(_gameboard.getCurrentPlayer());
+        if (m == getMyMark()) {
+            Move move = new Move();
+            move.setGameID(_gameID);
+            move.setPositionX(x);
+            move.setPositionY(y);
 
-	if (m == getMyMark()) {
+            Message message = StanzaBuilder.buildMessage()
+                .to(_opponent)
+                .addExtension(move)
+                .build();
+            try {
+                SparkManager.getConnection().sendStanza(message);
+            } catch (SmackException.NotConnectedException | InterruptedException e) {
+                Log.warning("Unable to send move to " + message.getTo(), e);
+            }
+        }
 
-	    MovePacket move = new MovePacket();
-	    move.setGameID(_gameID);
-	    move.setPositionX(x);
-	    move.setPositionY(y);
+        if (_gameboard.isGameFinished()) {
+            _gameboardpanel.colorizeWinners(_gameboard.getWinningPositions());
+            if (_gameboard.getWinner() == getMyMark().getValue()) {
+                remove(_playerdisplay);
+                add(new GameEndsUI(TTTRes.getString("ttt.win"), Color.GREEN), BorderLayout.SOUTH);
+            }
+            if (_gameboard.getWinner() == getYourMark().getValue()) {
+                remove(_playerdisplay);
+                add(new GameEndsUI(TTTRes.getString("ttt.lose"), Color.RED), BorderLayout.SOUTH);
+            }
+            if (_gameboard.getWinner() == -1) {
+                remove(_playerdisplay);
+                add(new GameEndsUI(TTTRes.getString("ttt.tie"), Color.BLACK), BorderLayout.SOUTH);
+            }
 
-        Message message = StanzaBuilder.buildMessage()
-            .addExtension(move)
-            .build();
-        message.setTo(_opponent);
-		try
-		{
-			_connection.sendStanza(message);
-		}
-		catch ( SmackException.NotConnectedException | InterruptedException e )
-		{
-			Log.warning( "Unable to send move to " + message.getTo(), e );
-		}
-
-	}
-
-	if (_gameboard.isGameFinished()) {
-	   _gameboardpanel.colorizeWinners(_gameboard.getWinningPositions());
-	    
-	    if (_gameboard.getWinner() == getMyMark().getValue()) {
-		
-		remove(_playerdisplay);
-		add(new GameEndsUI(TTTRes.getString("ttt.win"), Color.GREEN), BorderLayout.SOUTH);
-		
-	    }
-	    if (_gameboard.getWinner() == getYourMark().getValue()) {
-		remove(_playerdisplay);
-		add(new GameEndsUI(TTTRes.getString("ttt.lose"), Color.RED), BorderLayout.SOUTH);
-	    }
-	    if (_gameboard.getWinner() == -1) {
-		remove(_playerdisplay);
-		add(new GameEndsUI(TTTRes.getString("ttt.tie"), Color.BLACK), BorderLayout.SOUTH);
-	    }
-
-	  
-	    ShakeWindow sw = new ShakeWindow(_frame);
-	    sw.startShake();
-	    repaint();
-	    revalidate();
-
-	}
+            ShakeWindow sw = new ShakeWindow(_frame);
+            sw.startShake();
+            repaint();
+            revalidate();
+        }
     }
 
     public Mark getMyMark() {
-	return me;
+        return me;
     }
 
     public Mark getYourMark() {
-	if (me == Mark.X)
-	    return Mark.O;
-	else
-	    return Mark.X;
+        return me == Mark.X ? Mark.O : Mark.X;
     }
 
     public boolean myTurn() {
-	return _playerdisplay.getCurrentPlayer() == getMyMark()
-		&& !_gameboard.isGameFinished();
+        return _playerdisplay.getCurrentPlayer() == getMyMark()
+            && !_gameboard.isGameFinished();
     }
 
     public boolean isFree(int x, int y) {
-	return _gameboard.getMarkAtPos(x, y) == Mark.BLANK;
+        return _gameboard.getMarkAtPos(x, y) == Mark.BLANK;
     }
 
 }

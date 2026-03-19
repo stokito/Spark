@@ -32,20 +32,8 @@ import java.util.Arrays;
  * @author Matt Tucker
  */
 public class ReversiModel {
-
-    /**
-     * Blank.
-     */
     public static final int BLANK = 0;
-
-    /**
-     * White.
-     */
     public static final int WHITE = 1;
-
-    /**
-     * Black.
-     */
     public static final int BLACK = 2;
 
     private final int[] board;
@@ -66,7 +54,6 @@ public class ReversiModel {
         board[28] = BLACK;
         board[35] = BLACK;
         board[36] = WHITE;
-
         // Black always starts.
         currentPlayer = BLACK;
     }
@@ -120,8 +107,6 @@ public class ReversiModel {
 
     /**
      * Returns the black player's current score.
-     *
-     * @return the black player's current score.
      */
     public int getWhiteScore() {
         int score = 0;
@@ -135,8 +120,6 @@ public class ReversiModel {
 
     /**
      * Returns the white player's current score.
-     *
-     * @return the white player's current score.
      */
     public int getBlackScore() {
         int score = 0;
@@ -254,13 +237,9 @@ public class ReversiModel {
      */
     private synchronized int getFlipCount(int position, int player, boolean doFlips) {
         int flipCount = 0;
-
         // Traverse vertically, horizontally, and diagonally to flip pieces.
-
         // Going left horizontally.
-
         boolean edge;
-
         if (position % 8 > 1) {
             edge = false;
             for (int i = position - 1; !edge; i--) {

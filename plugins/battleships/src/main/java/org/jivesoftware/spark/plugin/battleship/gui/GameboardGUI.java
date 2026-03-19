@@ -28,19 +28,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.jivesoftware.spark.plugin.battleship.BsRes;
 import org.jivesoftware.spark.plugin.battleship.listener.ShipPlacementListener;
 import org.jivesoftware.spark.plugin.battleship.types.Types;
 
 public class GameboardGUI extends JPanel {
-    private static final long serialVersionUID = -6429298293488133059L;
-
-    private final Image _bg;
     private final JLabel[][] _labels;
 
     public GameboardGUI() {
-        ClassLoader cl = getClass().getClassLoader();
-        _bg = new ImageIcon(cl.getResource("water.png")).getImage();
-
         setLayout(new GridLayout(10, 10));
         _labels = new JLabel[10][10];
 
@@ -64,7 +59,7 @@ public class GameboardGUI extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        final Image backgroundImage = _bg;
+        final Image backgroundImage = BsRes.BACKGROUND_IMAGE;
         double scaleX = getWidth() / (double) backgroundImage.getWidth(null);
         double scaleY = getHeight() / (double) backgroundImage.getHeight(null);
         AffineTransform xform = AffineTransform.getScaleInstance(scaleX, scaleY);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.spark.plugin.battleship.packets;
+package org.jivesoftware.spark.plugin.battleship.packet;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.XmlEnvironment;
@@ -28,25 +28,16 @@ import java.io.IOException;
 /**
  * The Move Packet extension
  *
- * @author wolf.posdorfer
+ * @author Wolf Posdorfer
  */
-public class MovePacket implements ExtensionElement {
-
+public class Move implements ExtensionElement {
     public static final String ELEMENT_NAME = "bs-move";
     public static final String NAMESPACE = "battleship";
     public static final QName QNAME = new QName(NAMESPACE, ELEMENT_NAME);
 
+    private int gameID;
     private int posX;
     private int posY;
-    private int gameID;
-
-    public int getGameID() {
-        return gameID;
-    }
-
-    public void setGameID(int gameID) {
-        this.gameID = gameID;
-    }
 
     @Override
     public String getElementName() {
@@ -56,6 +47,17 @@ public class MovePacket implements ExtensionElement {
     @Override
     public String getNamespace() {
         return NAMESPACE;
+    }
+
+    /**
+     * Returns the game ID that this move pertains to.
+     */
+    public int getGameID() {
+        return gameID;
+    }
+
+    public void setGameID(int gameID) {
+        this.gameID = gameID;
     }
 
     public int getPositionX() {
@@ -84,45 +86,34 @@ public class MovePacket implements ExtensionElement {
         return buf;
     }
 
-    public static class Provider extends ExtensionElementProvider<MovePacket>
-    {
+    public static class Provider extends ExtensionElementProvider<Move> {
         @Override
-        public MovePacket parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException
-        {
-            final MovePacket gameMove = new MovePacket();
+        public Move parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+            final Move move = new Move();
             boolean done = false;
-            while ( !done )
-            {
+            while (!done) {
                 final XmlPullParser.Event eventType = parser.next();
 
-                if ( eventType == XmlPullParser.Event.START_ELEMENT )
-                {
-                    if ( "gameID".equals( parser.getName() ) )
-                    {
-                        final int gameID = Integer.parseInt( parser.nextText() );
-                        gameMove.setGameID( gameID );
+                if (eventType == XmlPullParser.Event.START_ELEMENT) {
+                    if ("gameID".equals(parser.getName())) {
+                        final int gameID = Integer.parseInt(parser.nextText());
+                        move.setGameID(gameID);
                     }
-                    if ( "positionX".equals( parser.getName() ) )
-                    {
-                        final int position = Integer.parseInt( parser.nextText() );
-                        gameMove.setPositionX( position );
+                    if ("positionX".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionX(position);
                     }
-                    if ( "positionY".equals( parser.getName() ) )
-                    {
-                        final int position = Integer.parseInt( parser.nextText() );
-                        gameMove.setPositionY( position );
+                    if ("positionY".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionY(position);
                     }
-                }
-                else if ( eventType == XmlPullParser.Event.END_ELEMENT )
-                {
-                    if ( ELEMENT_NAME.equals( parser.getName() ) )
-                    {
+                } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
+                    if (ELEMENT_NAME.equals(parser.getName())) {
                         done = true;
                     }
                 }
             }
-
-            return gameMove;
+            return move;
         }
     }
 }

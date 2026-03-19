@@ -17,9 +17,6 @@ package tic.tac.toe;
 
 /**
  * Represents a Pair of Coordinates with the Mark underneath
- * 
- * @author wolf.posdorfer
- * @version 16.06.2011
  */
 public class Pair {
 

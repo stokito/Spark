@@ -16,6 +16,7 @@
 package org.jivesoftware.spark.plugin.battleship.types;
 
 import javax.swing.ImageIcon;
+import java.util.Objects;
 
 public enum Types {
     EMPTY("empty.png"),
@@ -36,14 +37,14 @@ public enum Types {
         }
     }
 
-    private final String _iconName;
+    private final ImageIcon image;
 
     Types(String iconName) {
-        _iconName = iconName;
+        ClassLoader cl = getClass().getClassLoader();
+        image = new ImageIcon(Objects.requireNonNull(cl.getResource(iconName)));
     }
 
     public ImageIcon getImage() {
-        ClassLoader cl = getClass().getClassLoader();
-        return new ImageIcon(cl.getResource(_iconName));
+        return image;
     }
 }
