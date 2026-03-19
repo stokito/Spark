@@ -18,33 +18,35 @@ import org.jivesoftware.spark.plugin.Plugin;
 import org.jivesoftware.spark.ui.ChatRoom;
 
 import org.jivesoftware.spark.plugin.battleship.listener.ChatRoomOpeningListener;
-import org.jivesoftware.spark.plugin.battleship.packets.GameOfferPacket;
-import org.jivesoftware.spark.plugin.battleship.packets.MoveAnswerPacket;
-import org.jivesoftware.spark.plugin.battleship.packets.MovePacket;
+import org.jivesoftware.spark.plugin.battleship.packets.GameOffer;
+import org.jivesoftware.spark.plugin.battleship.packets.MoveAnswer;
+import org.jivesoftware.spark.plugin.battleship.packets.Move;
+import org.jivesoftware.spark.util.ResourceUtils;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.EntityJid;
 
 public class BattleshipPlugin implements Plugin {
 
     @Override
     public void initialize() {
-        ProviderManager.addIQProvider(GameOfferPacket.ELEMENT_NAME, GameOfferPacket.NAMESPACE, new GameOfferPacket.Provider());
-        ProviderManager.addExtensionProvider(MovePacket.ELEMENT_NAME, MovePacket.NAMESPACE, new MovePacket.Provider());
-        ProviderManager.addExtensionProvider(MoveAnswerPacket.ELEMENT_NAME, MoveAnswerPacket.NAMESPACE, new MoveAnswerPacket.Provider());
+        ProviderManager.addIQProvider(GameOffer.ELEMENT_NAME, GameOffer.NAMESPACE, new GameOffer.Provider());
+        ProviderManager.addExtensionProvider(Move.ELEMENT_NAME, Move.NAMESPACE, new Move.Provider());
+        ProviderManager.addExtensionProvider(MoveAnswer.ELEMENT_NAME, MoveAnswer.NAMESPACE, new MoveAnswer.Provider());
 
         StanzaListener _gameOfferListener = stanza -> {
-            GameOfferPacket invitation = (GameOfferPacket) stanza;
+            GameOffer invitation = (GameOffer) stanza;
             if (invitation.getType() == IQ.Type.get) {
                 showInvitationInChat(invitation);
             }
         };
 
         SparkManager.getConnection().addAsyncStanzaListener(_gameOfferListener,
-            new StanzaTypeFilter(GameOfferPacket.class));
+            new StanzaTypeFilter(GameOffer.class));
         ChatRoomOpeningListener _chatRoomListener = new ChatRoomOpeningListener();
         SparkManager.getChatManager().addChatRoomListener(_chatRoomListener);
     }
 
-    private void showInvitationInChat(final GameOfferPacket invitation) {
+    private void showInvitationInChat(final GameOffer invitation) {
         invitation.setType(IQ.Type.result);
         invitation.setTo(invitation.getFrom());
 
@@ -55,34 +57,40 @@ public class BattleshipPlugin implements Plugin {
         JLabel game = new JLabel("Battleships");
         game.setFont(new Font("Dialog", Font.BOLD, 24));
         game.setForeground(Color.RED);
-        JButton accept = new JButton(Res.getString("button.accept").replace("&", ""));
-        JButton decline = new JButton(Res.getString("button.decline").replace("&", ""));
+        JButton acceptButton = new JButton();
+        ResourceUtils.resButton(acceptButton, Res.getString("button.accept"));
+        JButton declineButton = new JButton();
+        ResourceUtils.resButton(declineButton, Res.getString("button.decline"));
         panel.add(text);
         panel.add(game);
-        panel.add(accept);
-        panel.add(decline);
+        panel.add(acceptButton);
+        panel.add(declineButton);
         room.getTranscriptWindow().addComponent(panel);
 
-        accept.addActionListener(e -> {
+        declineButton.addActionListener(e -> {
             try {
                 SparkManager.getConnection().sendStanza(invitation);
             } catch (SmackException.NotConnectedException | InterruptedException e1) {
                 Log.warning("Unable to send invitation accept to " + invitation.getTo(), e1);
+                return;
             }
             invitation.setStartingPlayer(!invitation.isStartingPlayer());
-            ChatRoomOpeningListener.createWindow(invitation, invitation.getFrom().toString());
+            EntityJid opponentJID = invitation.getFrom().asEntityBareJidIfPossible();
+            String opponentName = opponentJID.getLocalpart().asUnescapedString();
+            ChatRoomOpeningListener.createWindow(invitation, opponentName);
             panel.remove(3);
             panel.remove(2);
             panel.repaint();
             panel.revalidate();
         });
 
-        decline.addActionListener(e -> {
+        acceptButton.addActionListener(e -> {
             invitation.setType(IQ.Type.error);
             try {
                 SparkManager.getConnection().sendStanza(invitation);
             } catch (SmackException.NotConnectedException | InterruptedException e1) {
                 Log.warning("Unable to send invitation decline to " + invitation.getTo(), e1);
+                return;
             }
             panel.remove(3);
             panel.remove(2);

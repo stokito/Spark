@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.game.reversi;
+package org.jivesoftware.game.reversi.packets;
 
+import org.jivesoftware.game.reversi.ReversiModel;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.XmlEnvironment;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
@@ -26,16 +27,15 @@ import javax.xml.namespace.QName;
 import java.io.IOException;
 
 /**
- * A packet extension that represents an individual game move. Each move is simply an integer
- * indicating the position on the board the user wishes to place their stone. It's assumed that
+ * A packet extension that represents an individual game move.
+ * Each move is simply an integer indicating the position on the board the user wishes to place their stone. It's assumed that
  * both players maintain their own copy of the game model and only send valid moves. If an
  * invalid move is received from the opponent, the player should immediately terminate the game.<p>
- *
  * The game board is 64 squares; see {@link ReversiModel} for full details.
  *
  * @author Matt Tucker
  */
-public class GameMove implements ExtensionElement {
+public class Move implements ExtensionElement {
 
     public static final String ELEMENT_NAME = "reversi-move";
     public static final String NAMESPACE = "http://jivesoftware.org/protocol/game/reversi";
@@ -44,36 +44,23 @@ public class GameMove implements ExtensionElement {
     private int gameID;
     private int position;
 
+    @Override
     public String getElementName() {
         return ELEMENT_NAME;
     }
 
+    @Override
     public String getNamespace() {
         return NAMESPACE;
     }
 
-    @Override
-    public String toXML(XmlEnvironment xmlEnvironment) {
-        return "<" + ELEMENT_NAME + " xmlns=\"" + NAMESPACE + "\">"
-            + "<gameID>" + gameID + "</gameID>"
-            + "<position>" + position + "</position>"
-            + "</" + ELEMENT_NAME + ">";
-    }
-
     /**
      * Returns the game ID that this move pertains to.
-     *
-     * @return the game ID.
      */
     public int getGameID() {
         return gameID;
     }
 
-    /**
-     * Sets the game ID that this move pertains to.
-     *
-     * @param gameID the game ID.
-     */
     public void setGameID(int gameID) {
         this.gameID = gameID;
     }
@@ -99,22 +86,30 @@ public class GameMove implements ExtensionElement {
         this.position = position;
     }
 
-    public static class Provider extends ExtensionElementProvider<GameMove> {
+    @Override
+    public String toXML(XmlEnvironment xmlEnvironment) {
+        return "<" + ELEMENT_NAME + " xmlns=\"" + NAMESPACE + "\">"
+            + "<gameID>" + gameID + "</gameID>"
+            + "<position>" + position + "</position>"
+            + "</" + ELEMENT_NAME + ">";
+    }
+
+    public static class Provider extends ExtensionElementProvider<Move> {
 
         @Override
-        public GameMove parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
-            final GameMove gameMove = new GameMove();
+        public Move parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+            final Move move = new Move();
             boolean done = false;
             while (!done) {
                 final XmlPullParser.Event eventType = parser.next();
                 if (eventType == XmlPullParser.Event.START_ELEMENT) {
                     if ("gameID".equals(parser.getName())) {
                         final int gameID = Integer.parseInt(parser.nextText());
-                        gameMove.setGameID(gameID);
+                        move.setGameID(gameID);
                     }
                     if ("position".equals(parser.getName())) {
                         final int position = Integer.parseInt(parser.nextText());
-                        gameMove.setPosition(position);
+                        move.setPosition(position);
                     }
                 } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
                     if (ELEMENT_NAME.equals(parser.getName())) {
@@ -122,7 +117,7 @@ public class GameMove implements ExtensionElement {
                     }
                 }
             }
-            return gameMove;
+            return move;
         }
     }
 }

@@ -16,7 +16,8 @@
 package org.jivesoftware.game.reversi;
 
 import java.awt.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -24,12 +25,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import org.jivesoftware.game.reversi.packets.GameForfeit;
+import org.jivesoftware.game.reversi.packets.GameOffer;
+import org.jivesoftware.game.reversi.packets.Move;
+import org.jivesoftware.resource.Res;
+import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.filter.StanzaIdFilter;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
 import org.jivesoftware.smack.iqrequest.IQRequestHandler;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.spark.ChatManager;
@@ -40,9 +45,12 @@ import org.jivesoftware.spark.ui.ChatRoom;
 import org.jivesoftware.spark.ui.ChatRoomButton;
 import org.jivesoftware.spark.ui.ChatRoomListener;
 import org.jivesoftware.spark.ui.rooms.ChatRoomImpl;
+import org.jivesoftware.spark.util.ResourceUtils;
 import org.jivesoftware.spark.util.log.Log;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
+
+import static org.jivesoftware.smack.packet.StanzaError.Condition.undefined_condition;
 
 /**
  * Reversi plugin. Reversi is a two-player, turn-based game. See
@@ -56,20 +64,19 @@ public class ReversiPlugin implements Plugin {
     private ChatRoomListener chatRoomListener;
     private IQRequestHandler gameOfferHandler;
 
-    private ConcurrentHashMap<String, JPanel> gameOffers;
-    private ConcurrentHashMap<Jid, JPanel> gameInvitations;
+    /**
+     * Offers and invitations hold all pending game offers we've sent to
+     * other users or incoming invitations.
+     * The map key is always the opponent's JID.
+     * The map value is a transcript alert UI component.
+     */
+    private Map<Jid, JPanel> gameInvitations;
 
     private JPanel inviteAlert;
 
     @Override
     public void initialize() {
-        // Offers and invitations hold all pending game offers we've sent to
-        // other users or incoming invitations.
-        // The map key is always the opponent's JID.
-        // The map value is a transcript alert UI component.
-        gameOffers = new ConcurrentHashMap<>(0);
-        gameInvitations = new ConcurrentHashMap<>(0);
-
+        gameInvitations = new HashMap<>(0);
         // Add Reversi item to the chat toolbar.
         addToolbarButton();
 
@@ -77,7 +84,7 @@ public class ReversiPlugin implements Plugin {
         // The plugin uses custom XMPP extensions to communicate game offers and current game state.
         // Adding the Smack providers lets us use the custom protocol.
         ProviderManager.addIQProvider(GameOffer.ELEMENT_NAME, GameOffer.NAMESPACE, new GameOffer.Provider());
-        ProviderManager.addExtensionProvider(GameMove.ELEMENT_NAME, GameMove.NAMESPACE, new GameMove.Provider());
+        ProviderManager.addExtensionProvider(Move.ELEMENT_NAME, Move.NAMESPACE, new Move.Provider());
         ProviderManager.addExtensionProvider(GameForfeit.ELEMENT_NAME, GameForfeit.NAMESPACE, new GameForfeit.Provider());
 
         // Add the IQ listener to listen for incoming game invitations.
@@ -103,16 +110,12 @@ public class ReversiPlugin implements Plugin {
         // Remove IQ listener
         SparkManager.getConnection().unregisterIQRequestHandler(gameOfferHandler);
 //        // See if there are any pending offers or invitations. If so, cancel them.
-//        gameOffers.forEach((k, v) -> {
-//            System.out.println("gameoffer " + k);
-//        });
 //        System.out.println(gameInvitations.keySet());
-        gameOffers.clear();
-        gameInvitations.clear();
+        gameInvitations = null;
 
         // Remove Smack providers.
         ProviderManager.removeIQProvider(GameOffer.ELEMENT_NAME, GameOffer.NAMESPACE);
-        ProviderManager.removeExtensionProvider(GameMove.ELEMENT_NAME, GameMove.NAMESPACE);
+        ProviderManager.removeExtensionProvider(Move.ELEMENT_NAME, Move.NAMESPACE);
         ProviderManager.removeExtensionProvider(GameForfeit.ELEMENT_NAME, GameForfeit.NAMESPACE);
     }
 
@@ -144,12 +147,9 @@ public class ReversiPlugin implements Plugin {
         inviteAlert.setLayout(new BorderLayout());
 
         JPanel invitePanel = new JPanel() {
-            private static final long serialVersionUID = 5942001917654498678L;
-
             @Override
             protected void paintComponent(Graphics g) {
-                ImageIcon imageIcon = ReversiRes.getImageIcon(ReversiRes.REVERSI_ICON);
-                Image image = imageIcon.getImage();
+                Image image = ReversiRes.REVERSI_ICON.getImage();
                 g.drawImage(image, 0, 0, null);
             }
         };
@@ -162,8 +162,10 @@ public class ReversiPlugin implements Plugin {
         JPanel buttonPanel = new JPanel();
 
         // The accept button. When clicked, accept the game offer.
-        final JButton acceptButton = new JButton("Accept");
-        final JButton declineButton = new JButton("Decline");
+        JButton acceptButton = new JButton();
+        ResourceUtils.resButton(acceptButton, Res.getString("button.accept"));
+        JButton declineButton = new JButton();
+        ResourceUtils.resButton(declineButton, Res.getString("button.decline"));
 
         acceptButton.addActionListener(e -> {
             // Accept the game offer by sending a positive reply packet.
@@ -198,7 +200,7 @@ public class ReversiPlugin implements Plugin {
             reply.setTo(invitation.getFrom());
             reply.setStanzaId(invitation.getStanzaId());
             reply.setType(IQ.Type.error);
-            reply.setError(StanzaError.getBuilder().setCondition(StanzaError.Condition.undefined_condition).setDescriptiveEnText("User declined your request.").build());
+            reply.setError(StanzaError.getBuilder().setCondition(undefined_condition).setDescriptiveEnText("User declined your request.").build());
             try {
                 SparkManager.getConnection().sendStanza(reply);
             } catch (SmackException.NotConnectedException | InterruptedException e1) {
@@ -236,7 +238,7 @@ public class ReversiPlugin implements Plugin {
     private void addToolbarButton() {
         ChatManager manager = SparkManager.getChatManager();
         chatRoomListener = new ChatRoomListener() {
-            final ImageIcon icon = ReversiRes.getImageIcon(ReversiRes.REVERSI_ICON);
+            final ImageIcon icon = ReversiRes.REVERSI_ICON;
 
             @Override
             public void chatRoomOpened(final ChatRoom room) {
@@ -261,8 +263,6 @@ public class ReversiPlugin implements Plugin {
                     final JPanel request = new JPanel();
                     request.setLayout(new BorderLayout());
                     JPanel requestPanel = new JPanel() {
-                        private static final long serialVersionUID = 4490592207923738251L;
-
                         @Override
                         protected void paintComponent(Graphics g) {
                             g.drawImage(icon.getImage(), 0, 0, null);
@@ -271,18 +271,17 @@ public class ReversiPlugin implements Plugin {
                     requestPanel.setPreferredSize(new Dimension(24, 24));
                     request.add(requestPanel, BorderLayout.WEST);
 
-                    String opponentName = "[" + opponentJID + "]"; // TODO:
-                    // convert to more readable name.
+                    String opponentName = opponentJID.getLocalpart().asUnescapedString();
                     final JPanel content = new JPanel(new BorderLayout());
-                    final JLabel label = new JLabel("Requesting a Reversi game with " + opponentName + ", please wait...");
+                    final JLabel label = new JLabel(ReversiRes.getString("reversi.gameInvitationSent", opponentName));
                     content.add(label, BorderLayout.CENTER);
                     JPanel buttonPanel = new JPanel();
-                    final JButton cancelButton = new JButton("Cancel");
+                    final JButton cancelButton = new JButton(SparkRes.getString("cancel"));
                     cancelButton.addActionListener(e12 -> {
                         GameOffer reply = new GameOffer();
                         reply.setTo(opponentJID);
                         reply.setType(IQ.Type.error);
-                        reply.setError(StanzaError.getBuilder().setCondition(StanzaError.Condition.undefined_condition).setDescriptiveEnText("User cancelled the invitation.").build());
+                        reply.setError(StanzaError.getBuilder().setCondition(undefined_condition).setDescriptiveEnText("User cancelled the invitation.").build());
 
                         try {
                             SparkManager.getConnection().sendStanza(reply);
@@ -375,4 +374,5 @@ public class ReversiPlugin implements Plugin {
         manager.removeChatRoomListener(chatRoomListener);
         // TODO: remove actual buttons from toolbar.
     }
+
 }

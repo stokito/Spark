@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.game.reversi;
+package org.jivesoftware.spark.plugin.battleship.packets;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.XmlEnvironment;
@@ -26,14 +26,19 @@ import javax.xml.namespace.QName;
 import java.io.IOException;
 
 /**
- * A packet extension sent to indicate that the player forfeits the game.
+ * The Move Packet extension
+ *
+ * @author wolf.posdorfer
  */
-public class GameForfeit implements ExtensionElement {
-    public static final String ELEMENT_NAME = "reversi-forfeit";
-    public static final String NAMESPACE = "http://jivesoftware.org/protocol/game/reversi";
+public class Move implements ExtensionElement {
+
+    public static final String ELEMENT_NAME = "bs-move";
+    public static final String NAMESPACE = "battleship";
     public static final QName QNAME = new QName(NAMESPACE, ELEMENT_NAME);
 
     private int gameID;
+    private int posX;
+    private int posY;
 
     @Override
     public String getElementName() {
@@ -45,43 +50,63 @@ public class GameForfeit implements ExtensionElement {
         return NAMESPACE;
     }
 
-    @Override
-    public String toXML(XmlEnvironment xmlEnvironment) {
-        return "<" + ELEMENT_NAME + " xmlns=\"" + NAMESPACE + "\">"
-            + "<gameID>" + gameID + "</gameID>"
-            + "</" + ELEMENT_NAME + ">";
-    }
-
     /**
-     * Returns the game ID that this forfeit pertains to.
-     *
-     * @return the game ID.
+     * Returns the game ID that this move pertains to.
      */
     public int getGameID() {
         return gameID;
     }
 
-    /**
-     * Sets the game ID that this forfeit pertains to.
-     *
-     * @param gameID the game ID.
-     */
     public void setGameID(int gameID) {
         this.gameID = gameID;
     }
 
+    public int getPositionX() {
+        return posX;
+    }
 
-    public static class Provider extends ExtensionElementProvider<GameForfeit> {
+    public void setPositionX(int posX) {
+        this.posX = posX;
+    }
+
+    public int getPositionY() {
+        return posY;
+    }
+
+    public void setPositionY(int posY) {
+        this.posY = posY;
+    }
+
+    @Override
+    public CharSequence toXML(XmlEnvironment xmlEnvironment) {
+        String buf = "<" + ELEMENT_NAME + " xmlns=\"" + NAMESPACE + "\">" +
+            "<gameID>" + gameID + "</gameID>" +
+            "<positionX>" + posX + "</positionX>" +
+            "<positionY>" + posY + "</positionY>" +
+            "</" + ELEMENT_NAME + ">";
+        return buf;
+    }
+
+    public static class Provider extends ExtensionElementProvider<Move> {
         @Override
-        public GameForfeit parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
-            final GameForfeit gameForfeit = new GameForfeit();
+        public Move parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+            final Move move = new Move();
             boolean done = false;
             while (!done) {
                 final XmlPullParser.Event eventType = parser.next();
+
                 if (eventType == XmlPullParser.Event.START_ELEMENT) {
                     if ("gameID".equals(parser.getName())) {
                         final int gameID = Integer.parseInt(parser.nextText());
-                        gameForfeit.setGameID(gameID);
+                        move.setGameID(gameID);
+                    }
+                    if ("positionX".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionX(position);
+                    }
+                    if ("positionY".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionY(position);
                     }
                 } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
                     if (ELEMENT_NAME.equals(parser.getName())) {
@@ -89,7 +114,7 @@ public class GameForfeit implements ExtensionElement {
                     }
                 }
             }
-            return gameForfeit;
+            return move;
         }
     }
 }

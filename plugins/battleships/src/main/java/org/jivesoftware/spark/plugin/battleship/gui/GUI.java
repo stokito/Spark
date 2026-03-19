@@ -32,14 +32,11 @@ import org.jivesoftware.spark.plugin.battleship.logic.GameBoard;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.jivesoftware.spark.plugin.battleship.packets.MoveAnswerPacket;
-import org.jivesoftware.spark.plugin.battleship.packets.MovePacket;
+import org.jivesoftware.spark.plugin.battleship.packets.MoveAnswer;
+import org.jivesoftware.spark.plugin.battleship.packets.Move;
 import org.jxmpp.jid.Jid;
 
 public class GUI extends JPanel implements Observer {
-
-    private static final long serialVersionUID = -7538765009749015196L;
-
     private final Display _display;
     private final GameboardGUI _myField;
     private final GameboardGUI _theirField;
@@ -79,7 +76,7 @@ public class GUI extends JPanel implements Observer {
         add(West, BorderLayout.WEST);
 
         _connection.addAsyncStanzaListener(stanza -> {
-            MovePacket move = stanza.getExtension(MovePacket.class);
+            Move move = stanza.getExtension(Move.class);
             if (move.getGameID() == _gameID) {
                 boolean opponentMadeHit = _gameboard.placeBomb(move.getPositionX(), move.getPositionY());
                 if (opponentMadeHit) {
@@ -87,7 +84,7 @@ public class GUI extends JPanel implements Observer {
                     _connection.sendStanza(m);
                 }
             }
-        }, new StanzaExtensionFilter(MovePacket.ELEMENT_NAME, MovePacket.NAMESPACE));
+        }, new StanzaExtensionFilter(Move.ELEMENT_NAME, Move.NAMESPACE));
 
         // Start placing of the Ships
         _spListener = new ShipPlacementListener(_display, _gameboard, _myField);
@@ -96,11 +93,11 @@ public class GUI extends JPanel implements Observer {
         _myField.initiateShipPlacement(_spListener);
     }
 
-    private Message createAnswer(MovePacket incoming, Jid from) {
+    private Message createAnswer(Move incoming, Jid from) {
         Message answer = StanzaBuilder.buildMessage().build();
         answer.setTo(from);
 
-        MoveAnswerPacket map = new MoveAnswerPacket();
+        MoveAnswer map = new MoveAnswer();
         map.setGameID(incoming.getGameID());
         map.setPositionX(incoming.getPositionX());
         map.setPositionY(incoming.getPositionY());

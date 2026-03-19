@@ -34,9 +34,6 @@ import static tic.tac.toe.TTTRes.ICON_BOARD;
 
 /**
  * The Gui to the Logical Board
- * 
- * @author wolf.posdorfer
- * @version 16.06.2011
  */
 public class GameBoardPanel extends JPanel {
     private final Image _backgroundimage = ICON_BOARD.getImage();

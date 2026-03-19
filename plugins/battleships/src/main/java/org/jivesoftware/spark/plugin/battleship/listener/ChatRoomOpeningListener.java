@@ -7,22 +7,21 @@ import javax.swing.JFrame;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.filter.StanzaIdFilter;
-import org.jivesoftware.smack.packet.ErrorIQ;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.spark.SparkManager;
 import org.jivesoftware.spark.ui.ChatRoom;
 import org.jivesoftware.spark.ui.ChatRoomButton;
-import org.jivesoftware.spark.ui.ChatRoomListenerAdapter;
+import org.jivesoftware.spark.ui.ChatRoomListener;
 import org.jivesoftware.spark.ui.rooms.ChatRoomImpl;
 
 import org.jivesoftware.spark.plugin.battleship.BsRes;
 import org.jivesoftware.spark.plugin.battleship.gui.GUI;
-import org.jivesoftware.spark.plugin.battleship.packets.GameOfferPacket;
+import org.jivesoftware.spark.plugin.battleship.packets.GameOffer;
 import org.jivesoftware.spark.util.log.Log;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.util.XmppStringUtils;
 
-public class ChatRoomOpeningListener extends ChatRoomListenerAdapter {
+public class ChatRoomOpeningListener implements ChatRoomListener {
 
     @Override
     public void chatRoomOpened(final ChatRoom room) {
@@ -39,48 +38,41 @@ public class ChatRoomOpeningListener extends ChatRoomListenerAdapter {
             if (opponentJID == null) {
                 return;
             }
-            final GameOfferPacket offer = new GameOfferPacket();
+            final GameOffer offer = new GameOffer();
             offer.setTo(opponentJID);
             offer.setType(IQ.Type.get);
 
-            room.getTranscriptWindow().insertCustomText(
-                BsRes.getString("request"), false, false,
-                Color.BLUE);
+            room.getTranscriptWindow().insertCustomText(BsRes.getString("request"), false, false, Color.BLUE);
             try {
                 SparkManager.getConnection().sendStanza(offer);
             } catch (SmackException.NotConnectedException | InterruptedException e1) {
                 Log.warning("Unable to send offer to " + opponentJID, e1);
+                return;
             }
 
             SparkManager.getConnection().addAsyncStanzaListener(stanza -> {
                 if (stanza.getError() != null) {
-                    room.getTranscriptWindow().insertCustomText(
-                        BsRes.getString("request.error") + stanza.getError().getDescriptiveText(),
-                        false, false, Color.RED);
+                    room.getTranscriptWindow().insertCustomText(BsRes.getString("request.error") + stanza.getError().getDescriptiveText(), false, false, Color.RED);
                     return;
                 }
-                GameOfferPacket answer = (GameOfferPacket) stanza;
+                GameOffer answer = (GameOffer) stanza;
                 answer.setStartingPlayer(offer.isStartingPlayer());
                 answer.setGameID(offer.getGameID());
                 String name = opponentJID.getLocalpartOrNull().toString();
                 if (answer.getType() == IQ.Type.result) {
                     // ACCEPT
-                    room.getTranscriptWindow()
-                        .insertCustomText(BsRes.getString("accepted", name), false,
-                            false, Color.BLUE);
+                    room.getTranscriptWindow().insertCustomText(BsRes.getString("accepted", name), false, false, Color.BLUE);
                     createWindow(answer, opponentJID.toString());
                 } else {
                     // DECLINE
-                    room.getTranscriptWindow()
-                        .insertCustomText(BsRes.getString("declined", name), false,
-                            false, Color.RED);
+                    room.getTranscriptWindow().insertCustomText(BsRes.getString("declined", name), false, false, Color.RED);
                 }
             }, new StanzaIdFilter(offer.getStanzaId()));
         });
 
     }
 
-    public static void createWindow(GameOfferPacket answer, String opponentJID) {
+    public static void createWindow(GameOffer answer, String opponentJID) {
         JFrame frame = new JFrame(BsRes.getString("versus", XmppStringUtils.parseLocalpart(opponentJID)));
         frame.add(new GUI(answer.isStartingPlayer(), frame, SparkManager.getConnection(), answer.getGameID()));
         frame.pack();

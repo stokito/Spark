@@ -28,10 +28,9 @@ import java.io.IOException;
 /**
  * The MoveAnswer Packet Extension
  *
- * @author wolf.posdorfer
+ * @author Wolf Posdorfer
  */
-public class MoveAnswerPacket implements ExtensionElement {
-
+public class MoveAnswer implements ExtensionElement {
     public static final String ELEMENT_NAME = "bs-move";
     public static final String NAMESPACE = "battleship";
     public static final QName QNAME = new QName(NAMESPACE, ELEMENT_NAME);
@@ -41,14 +40,6 @@ public class MoveAnswerPacket implements ExtensionElement {
     private int gameID;
     private int hit;
     private int shipType;
-
-    public int getGameID() {
-        return gameID;
-    }
-
-    public void setGameID(int gameID) {
-        this.gameID = gameID;
-    }
 
     @Override
     public String getElementName() {
@@ -60,20 +51,28 @@ public class MoveAnswerPacket implements ExtensionElement {
         return NAMESPACE;
     }
 
+    public int getGameID() {
+        return gameID;
+    }
+
+    public void setGameID(int gameID) {
+        this.gameID = gameID;
+    }
+
     public int getPositionX() {
         return posX;
     }
 
-    public void setPositionX(int posx) {
-        this.posX = posx;
+    public void setPositionX(int posX) {
+        this.posX = posX;
     }
 
     public int getPositionY() {
         return posY;
     }
 
-    public void setPositionY(int posy) {
-        this.posY = posy;
+    public void setPositionY(int posY) {
+        this.posY = posY;
     }
 
     public int getHit() {
@@ -104,55 +103,41 @@ public class MoveAnswerPacket implements ExtensionElement {
         return buf;
     }
 
-    public static class Provider extends ExtensionElementProvider<MoveAnswerPacket>
-    {
+    public static class Provider extends ExtensionElementProvider<MoveAnswer> {
         @Override
-        public MoveAnswerPacket parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException
-        {
-            final MoveAnswerPacket gameMove = new MoveAnswerPacket();
+        public MoveAnswer parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+            final MoveAnswer move = new MoveAnswer();
             boolean done = false;
-            while ( !done )
-            {
+            while (!done) {
                 final XmlPullParser.Event eventType = parser.next();
-
-                if ( eventType == XmlPullParser.Event.START_ELEMENT )
-                {
-                    if ( "gameID".equals( parser.getName() ) )
-                    {
-                        final int gameID = Integer.parseInt( parser.nextText() );
-                        gameMove.setGameID( gameID );
+                if (eventType == XmlPullParser.Event.START_ELEMENT) {
+                    if ("gameID".equals(parser.getName())) {
+                        final int gameID = Integer.parseInt(parser.nextText());
+                        move.setGameID(gameID);
                     }
-                    if ( "positionX".equals( parser.getName() ) )
-                    {
-                        final int position = Integer.parseInt( parser.nextText() );
-                        gameMove.setPositionX( position );
+                    if ("positionX".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionX(position);
                     }
-                    if ( "positionY".equals( parser.getName() ) )
-                    {
-                        final int position = Integer.parseInt( parser.nextText() );
-                        gameMove.setPositionY( position );
+                    if ("positionY".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionY(position);
                     }
-                    if ( "hit".equals( parser.getName() ) )
-                    {
-                        final int hit = Integer.parseInt( parser.nextText() );
-                        gameMove.setHit( hit );
+                    if ("hit".equals(parser.getName())) {
+                        final int hit = Integer.parseInt(parser.nextText());
+                        move.setHit(hit);
                     }
-                    if ( "shiptype".equals( parser.getName() ) )
-                    {
-                        final int shipType = Integer.parseInt( parser.nextText() );
-                        gameMove.setShipType( shipType );
+                    if ("shiptype".equals(parser.getName())) {
+                        final int shipType = Integer.parseInt(parser.nextText());
+                        move.setShipType(shipType);
                     }
-                }
-                else if ( eventType == XmlPullParser.Event.END_ELEMENT )
-                {
-                    if ( ELEMENT_NAME.equals( parser.getName() ) )
-                    {
+                } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
+                    if (ELEMENT_NAME.equals(parser.getName())) {
                         done = true;
                     }
                 }
             }
-
-            return gameMove;
+            return move;
         }
     }
 }

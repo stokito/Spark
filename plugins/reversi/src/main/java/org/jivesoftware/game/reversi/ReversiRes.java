@@ -2,37 +2,46 @@ package org.jivesoftware.game.reversi;
 
 import org.jivesoftware.spark.util.log.Log;
 
+import java.awt.*;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 import javax.swing.ImageIcon;
 
 public class ReversiRes {
-    private static final PropertyResourceBundle prb = (PropertyResourceBundle) ResourceBundle.getBundle("reversi");
-    public static final String REVERSI_ICON = "REVERSI_ICON";
-    public static final String REVERSI_BOARD = "REVERSI_BOARD";
-    public static final String REVERSI_SCORE_WHITE = "REVERSI_SCORE_WHITE";
-    public static final String REVERSI_SCORE_BLACK = "REVERSI_SCORE_BLACK";
-    public static final String REVERSI_LABEL_BLACK = "REVERSI_LABEL_BLACK";
-    public static final String REVERSI_LABEL_WHITE = "REVERSI_LABEL_WHITE";
-    public static final String REVERSI_RESIGN = "REVERSI_RESIGN";
-    public static final String REVERSI_YOU = "REVERSI_YOU";
-    public static final String REVERSI_THEM = "REVERSI_THEM";
+    private static final PropertyResourceBundle prb = (PropertyResourceBundle) ResourceBundle.getBundle("i18n/reversi_i18n");
+    private static final ClassLoader cl = ReversiRes.class.getClassLoader();
+    public static final ImageIcon REVERSI_ICON = getIcon("images/reversi-icon.png");
+    public static final Image REVERSI_BOARD = getIcon("images/reversi-board.png").getImage();
+    public static final Image REVERSI_SCORE_WHITE = getIcon("images/score-button-white.png").getImage();
+    public static final Image REVERSI_SCORE_BLACK = getIcon("images/score-button-black.png").getImage();
+    public static final Image REVERSI_LABEL_BLACK = getIcon("images/turn-label-black.png").getImage();
+    public static final Image REVERSI_LABEL_WHITE = getIcon("images/turn-label-white.png").getImage();
+    public static final Image REVERSI_RESIGN = getIcon("images/button-resign.png").getImage();
+    public static final Image REVERSI_YOU = getIcon("images/you.png").getImage();
+    public static final Image REVERSI_THEM = getIcon("images/them.png").getImage();
 
     private ReversiRes() {
     }
 
-    private static final ClassLoader cl = ReversiRes.class.getClassLoader();
-
     public static String getString(String propertyName) {
-        return ReversiRes.prb.getString(propertyName);
+        try {
+            return prb.getString(propertyName);
+        } catch (Exception e) {
+            Log.warning(e.getMessage());
+            return propertyName;
+        }
+    }
+    public static String getString(String propertyName, Object... obj) {
+        String str = prb.getString(propertyName);
+        return MessageFormat.format(str, obj);
     }
 
-    public static ImageIcon getImageIcon(String imageName) {
+    private static ImageIcon getIcon(String imageName) {
         try {
-            final String iconURI = ReversiRes.getString(imageName);
-            final URL imageURL = ReversiRes.cl.getResource(iconURI);
+            final URL imageURL = cl.getResource(imageName);
             if (imageURL != null) {
                 return new ImageIcon(imageURL);
             } else {
@@ -42,9 +51,5 @@ public class ReversiRes {
             Log.warning("Unable to load image " + imageName, e);
         }
         return null;
-    }
-
-    public static URL getURL(String propertyName) {
-        return ReversiRes.cl.getResource(ReversiRes.getString(propertyName));
     }
 }

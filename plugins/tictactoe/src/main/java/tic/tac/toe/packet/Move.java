@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2004-2011 Jive Software. All rights reserved.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,102 +27,94 @@ import java.io.IOException;
 
 /**
  * The Move Packet extension
- * 
+ *
  * @author wolf.posdorfer
  * @version 16.06.2011
  */
-public class MovePacket implements ExtensionElement {
+public class Move implements ExtensionElement {
 
     public static final String ELEMENT_NAME = "ttt-move";
     public static final String NAMESPACE = "tictactoe";
     public static final QName QNAME = new QName(NAMESPACE, ELEMENT_NAME);
 
-    private int posx;
-    private int posy;
     private int gameID;
-
-    public int getGameID() {
-	return gameID;
-    }
-
-    public void setGameID(int gameID) {
-	this.gameID = gameID;
-    }
+    private int posX;
+    private int posY;
 
     @Override
     public String getElementName() {
-	return ELEMENT_NAME;
+        return ELEMENT_NAME;
     }
 
     @Override
     public String getNamespace() {
-	return NAMESPACE;
+        return NAMESPACE;
+    }
+
+    /**
+     * Returns the game ID that this move pertains to.
+     */
+    public int getGameID() {
+        return gameID;
+    }
+
+    public void setGameID(int gameID) {
+        this.gameID = gameID;
     }
 
     public int getPositionX() {
-	return posx;
+        return posX;
     }
 
-    public void setPositionX(int posx) {
-	this.posx = posx;
+    public void setPositionX(int posX) {
+        this.posX = posX;
     }
 
     public int getPositionY() {
-	return posy;
+        return posY;
     }
 
-    public void setPositionY(int posy) {
-	this.posy = posy;
+    public void setPositionY(int posY) {
+        this.posY = posY;
     }
 
     @Override
     public String toXML(XmlEnvironment xmlEnvironment) {
         return "<" + ELEMENT_NAME + " xmlns=\"" + NAMESPACE + "\">"
             + "<gameID>" + gameID + "</gameID>"
-            + "<positionX>" + posx + "</positionX>"
-            + "<positionY>" + posy + "</positionY>"
+            + "<positionX>" + posX + "</positionX>"
+            + "<positionY>" + posY + "</positionY>"
             + "</" + ELEMENT_NAME + ">";
     }
 
-    public static class Provider extends ExtensionElementProvider<MovePacket>
-    {
+    public static class Provider extends ExtensionElementProvider<Move> {
         @Override
-        public MovePacket parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException
-        {
-            final MovePacket gameMove = new MovePacket();
+        public Move parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment, JxmppContext jxmppContext) throws XmlPullParserException, IOException {
+            final Move move = new Move();
             boolean done = false;
-            while ( !done )
-            {
+            while (!done) {
                 final XmlPullParser.Event eventType = parser.next();
 
-                if ( eventType == XmlPullParser.Event.START_ELEMENT )
-                {
-                    if ( "gameID".equals( parser.getName() ) )
-                    {
-                        final int gameID = Integer.parseInt( parser.nextText() );
-                        gameMove.setGameID( gameID );
+                if (eventType == XmlPullParser.Event.START_ELEMENT) {
+                    if ("gameID".equals(parser.getName())) {
+                        final int gameID = Integer.parseInt(parser.nextText());
+                        move.setGameID(gameID);
                     }
-                    if ( "positionX".equals( parser.getName() ) )
-                    {
-                        final int position = Integer.parseInt( parser.nextText() );
-                        gameMove.setPositionX( position );
+                    if ("positionX".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionX(position);
                     }
-                    if ( "positionY".equals( parser.getName() ) )
-                    {
-                        final int position = Integer.parseInt( parser.nextText() );
-                        gameMove.setPositionY( position );
+                    if ("positionY".equals(parser.getName())) {
+                        final int position = Integer.parseInt(parser.nextText());
+                        move.setPositionY(position);
                     }
-                }
-                else if ( eventType == XmlPullParser.Event.END_ELEMENT )
-                {
-                    if ( ELEMENT_NAME.equals( parser.getName() ) )
-                    {
+                } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
+                    if (ELEMENT_NAME.equals(parser.getName())) {
                         done = true;
                     }
                 }
             }
-
-            return gameMove;
+            return move;
         }
     }
 }

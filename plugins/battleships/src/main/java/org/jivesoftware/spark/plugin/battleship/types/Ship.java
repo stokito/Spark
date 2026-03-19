@@ -16,6 +16,7 @@
 package org.jivesoftware.spark.plugin.battleship.types;
 
 import java.awt.Image;
+import java.util.Objects;
 
 import javax.swing.ImageIcon;
 
@@ -27,15 +28,17 @@ public enum Ship {
     FOUR("4.png"),
     FIVE("5.png");
 
-    private final String image;
+    private final ImageIcon image;
+    private final ImageIcon imageScaled;
 
     Ship(String s) {
-        image = s;
+        ClassLoader cl = getClass().getClassLoader();
+        image = new ImageIcon(Objects.requireNonNull(cl.getResource(s)));
+        imageScaled = new ImageIcon(image.getImage().getScaledInstance(100, 50, Image.SCALE_SMOOTH));
     }
 
     public ImageIcon getImage() {
-        ClassLoader cl = getClass().getClassLoader();
-        return new ImageIcon(cl.getResource(image));
+        return image;
     }
 
     public static Ship valueOf(int x) {
@@ -61,6 +64,7 @@ public enum Ship {
     public int inArrayPosition() {
         switch (this) {
             case TWO:
+                //noinspection DuplicateBranchesInSwitch
                 return 0;
             case THREE:
                 return 1;
@@ -85,6 +89,7 @@ public enum Ship {
             case THREE:
                 return 3;
             case THREE2:
+                //noinspection DuplicateBranchesInSwitch
                 return 3;
             case FOUR:
                 return 4;
@@ -94,9 +99,8 @@ public enum Ship {
         return 0;
     }
 
-    public ImageIcon getScaledInstance(int w, int h, int hints) {
-        Image img = getImage().getImage();
-        return new ImageIcon(img.getScaledInstance(w, h, hints));
+    public ImageIcon getScaledInstance() {
+        return imageScaled;
     }
 
     /**

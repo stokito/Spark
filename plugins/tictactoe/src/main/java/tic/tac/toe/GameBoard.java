@@ -15,85 +15,68 @@
  */
 package tic.tac.toe;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
  * Class to represent the TicTacToe gameboard
- * 
- * @author wolf.posdorfer
+ *
+ * @author Wolf Posdorfer
  * @version 16.06.2011
  */
 public class GameBoard {
-
     private final int[][] _board;
-
     private int _currentPlayer;
-
     private int _winner;
 
     public GameBoard() {
-
-	_board = new int[3][3];
-
-	for (int[] x : _board) {
-	    Arrays.fill(x, Mark.BLANK.ordinal());
-	}
-
-	_currentPlayer = Mark.X.ordinal();
-	_winner = 0;
-
+        _board = new int[3][3];
+        for (int[] x : _board) {
+            Arrays.fill(x, Mark.BLANK.ordinal());
+        }
+        _currentPlayer = Mark.X.ordinal();
+        _winner = 0;
     }
 
     public boolean isGameFinished() {
-	return _winner != 0;
+        return _winner != 0;
     }
-    
-    public int getWinner()
-    {
-	return _winner;
+
+    public int getWinner() {
+        return _winner;
     }
 
     public Mark getMarkAtPos(int x, int y) {
-
-	return Mark.valueOf(_board[x][y]);
+        return Mark.valueOf(_board[x][y]);
     }
 
     public Mark getCurrentPlayer() {
-	return Mark.valueOf(_currentPlayer);
+        return Mark.valueOf(_currentPlayer);
     }
 
     public void placeMark(int x, int y) {
-	_board[x][y] = _currentPlayer;
-
-	if (didCurrentPlayerWin()) {
-	    _winner = _currentPlayer;
-	}
-
-	if (isBoardFull() && _winner < 1) {
-	    // Setting to Tie
-	    _winner = -1;
-	}
-
-	_currentPlayer = _currentPlayer == 1 ? 2 : 1;
-
+        _board[x][y] = _currentPlayer;
+        if (didCurrentPlayerWin()) {
+            _winner = _currentPlayer;
+        }
+        if (isBoardFull() && _winner < 1) {
+            // Setting to Tie
+            _winner = -1;
+        }
+        _currentPlayer = _currentPlayer == 1 ? 2 : 1;
     }
 
     /**
      * Checks if the Currentplayer has won the game
-     * 
+     *
      * @return current player won the game?
      */
     private boolean didCurrentPlayerWin() {
-
         for (int x = 0; x < 3; x++) {
-
             if (_board[x][0] == _currentPlayer
                 && _board[x][1] == _currentPlayer
                 && _board[x][2] == _currentPlayer) {
                 return true;
             }
-
         }
 
         for (int y = 0; y < 3; y++) {
@@ -113,96 +96,76 @@ public class GameBoard {
 
     /**
      * Checks if the Board is Full
-     * 
-     * @return board is full?
+     *
+     * @return the board is full?
      */
     private boolean isBoardFull() {
-
-	for (int x = 0; x < 3; x++) {
-	    for (int y = 0; y < 3; y++) {
-
-		if (_board[x][y] == 0) {
-		    return false;
-		}
-	    }
-	}
-
-	return true;
-
+        for (int x = 0; x < 3; x++) {
+            for (int y = 0; y < 3; y++) {
+                if (_board[x][y] == 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
+
     /**
      * Returns the winning positions in an arraylist of Pairs
+     *
      * @return ArrayList<Pair> with 3 entries
      */
-    public Pair[] getWinningPositions()
-    {
-	ArrayList<Pair> liste = new ArrayList<>();
-	
-	if(_winner == -1)
-	{
-	    // TIE
-	    return null;
-	}
-	
-	Mark m = Mark.valueOf(_winner);
-	
-	for (int x = 0; x < 3; x++) {
+    public Pair[] getWinningPositions() {
+        if (_winner == -1) {
+            // TIE
+            return null;
+        }
+        Mark m = Mark.valueOf(_winner);
+        Pair[] positions;
+        for (int x = 0; x < 3; x++) {
+            if (_board[x][0] == _winner && _board[x][1] == _winner && _board[x][2] == _winner) {
+                positions = new Pair[]{
+                    new Pair(x, 0, m),
+                    new Pair(x, 1, m),
+                    new Pair(x, 2, m)
+                };
+                return positions;
+            }
+        }
+        for (int y = 0; y < 3; y++) {
+            if (_board[0][y] == _winner && _board[1][y] == _winner && _board[2][y] == _winner) {
+                positions = new Pair[]{
+                    new Pair(0, y, m),
+                    new Pair(1, y, m),
+                    new Pair(2, y, m)
+                };
+                return positions;
+            }
+        }
 
-	    if (_board[x][0] == _winner
-		    && _board[x][1] == _winner
-		    && _board[x][2] == _winner) {
-		new Pair(x, 0,m);
-		
-		liste.add(new Pair(x, 0, m));
-		liste.add(new Pair(x, 1, m));
-		liste.add(new Pair(x, 2, m));
-		return liste.toArray(new Pair[3]);
-		
-	    }
-
-	}
-
-	for (int y = 0; y < 3; y++) {
-	    if (_board[0][y] == _winner
-		    && _board[1][y] == _winner
-		    && _board[2][y] == _winner) {
-		
-		liste.add(new Pair(0, y, m));
-		liste.add(new Pair(1, y, m));
-		liste.add(new Pair(2, y, m));
-		return liste.toArray(new Pair[3]);
-	    }
-	}
-
-	if (_board[0][0] == _winner && _board[1][1] == _winner
-		&& _board[2][2] == _winner) {
-	    
-	    liste.add(new Pair(0, 0, m));
-	    liste.add(new Pair(1, 1, m));
-	    liste.add(new Pair(2, 2, m));
-	    	
-		return liste.toArray(new Pair[3]);
-	}
-	if (_board[2][0] == _winner && _board[1][1] == _winner
-		&& _board[0][2] == _winner) {
-	    liste.add(new Pair(2, 0, m));
-	    liste.add(new Pair(1, 1, m));
-	    liste.add(new Pair(0, 2, m));
-		return liste.toArray(new Pair[3]);
-	}
-
-	return null;
-
+        if (_board[0][0] == _winner && _board[1][1] == _winner && _board[2][2] == _winner) {
+            positions = new Pair[]{
+                new Pair(0, 0, m),
+                new Pair(1, 1, m),
+                new Pair(2, 2, m)
+            };
+            return positions;
+        }
+        if (_board[2][0] == _winner && _board[1][1] == _winner && _board[0][2] == _winner) {
+            positions = new Pair[]{
+                new Pair(2, 0, m),
+                new Pair(1, 1, m),
+                new Pair(0, 2, m)
+            };
+            return positions;
+        }
+        return null;
     }
-    
+
     /**
      * Checks if the placed move is Valid
-     * @param x
-     * @param y
-     * @return
      */
-    public boolean isValidMove(Mark markplaced, int x , int y)
-    {
-	return _board[x][y] == 0 && _currentPlayer == markplaced.getValue();
+    public boolean isValidMove(Mark markPlaced, int x, int y) {
+        return _board[x][y] == 0 && _currentPlayer == markPlaced.getValue();
     }
 }
