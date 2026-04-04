@@ -15,8 +15,12 @@
  */
 package org.jivesoftware.launcher;
 
+import com.install4j.api.launcher.ApplicationLauncher;
+import com.install4j.api.launcher.Variables;
+
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  */
@@ -28,6 +32,9 @@ public class Startup {
     private static final String DEFAULT_LIB_DIR = "../lib";
 
     public static void main(String[] args) {
+
+        Map<String, Object> installerVariables = Variables.getInstallerVariables();
+        System.out.println(installerVariables);
         new Startup().start(args);
     }
 
@@ -52,9 +59,6 @@ public class Startup {
             else {
                 libDir = new File(new File(workingDirectory), "lib");
             }
-            
-            File pluginDir = new File(libDir.getParentFile(), "plugins");
-
             // Load them into the classloader
             final ClassLoader loader = new JiveClassLoader(parent, libDir);
 
