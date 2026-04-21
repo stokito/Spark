@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Spark ?invite" type="Application" factoryName="Application" folderName="xmpp uri">
+    <option name="MAIN_CLASS_NAME" value="org.jivesoftware.Spark" />
+    <module name="spark-core" />
+    <option name="PROGRAM_PARAMETERS" value="xmpp:test@serv.stokito.duckdns.org?invite;invites=alice%40serv.stokito.duckdns.org%2Cbob%40serv.stokito.duckdns.org" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.jivesoftware.launcher.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

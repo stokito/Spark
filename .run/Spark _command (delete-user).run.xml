@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Spark ?command (delete-user)" type="Application" factoryName="Application" folderName="xmpp uri">
+    <option name="MAIN_CLASS_NAME" value="org.jivesoftware.Spark" />
+    <module name="spark-core" />
+    <option name="PROGRAM_PARAMETERS" value="xmpp:serv.stokito.duckdns.org?command;node=http%3A%2F%2Fjabber.org%2Fprotocol%2Fadmin%23add-user;form=%3Cx%20xmlns%3D%22jabber%3Ax%3Adata%22%20type%3D%22submit%22%3E%0A%3Cfield%20type%3D%22hidden%22%20var%3D%22FORM_TYPE%22%3E%0A%3Cvalue%3Ehttp%3A%2F%2Fjabber.org%2Fprotocol%2Fadmin%3C%2Fvalue%3E%0A%3C%2Ffield%3E%0A%3Cfield%20type%3D%22jid-multi%22%20var%3D%22accountjids%22%3E%0A%3Cvalue%3Ejuliet%40serv.stokito.duckdns.org%3C%2Fvalue%3E%0A%3C%2Ffield%3E%0A%3C%2Fx%3E%0A%3C%2Fcommand%3E" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.jivesoftware.launcher.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

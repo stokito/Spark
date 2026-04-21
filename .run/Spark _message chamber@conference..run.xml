@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Spark ?message chamber@conference." type="Application" factoryName="Application" folderName="xmpp uri">
+    <option name="MAIN_CLASS_NAME" value="org.jivesoftware.Spark" />
+    <module name="spark-core" />
+    <option name="PROGRAM_PARAMETERS" value="xmpp:chamber@conference.serv.stokito.duckdns.org?message;body=ping" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.jivesoftware.launcher.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
