@@ -12,7 +12,7 @@ import urllib.request
 import urllib.parse
 
 # Base directory
-BASE_DIR = Path("D:/work/Spark/core/src/main/resources/i18n")
+BASE_DIR = Path("./core/src/main/resources/i18n")
 ENGLISH_FILE = BASE_DIR / "spark_i18n.properties"
 
 def parse_properties(file_path: Path) -> Dict[str, str]:
