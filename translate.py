@@ -25,8 +25,7 @@ def parse_properties(file_path: Path) -> Dict[str, str]:
                 if line and not line.startswith('#'):
                     if '=' in line:
                         key, value = line.split('=', 1)
-                        if key not in ['offline', 'online']:
-                            props[key] = value
+                        props[key] = value
     except Exception as e:
         print(f"Error reading {file_path}: {e}")
     return props
@@ -100,8 +99,9 @@ def update_language_file(lang_code: str) -> Tuple[int, int]:
         print(f"{key}")
 
         english_text = english_props[key]
-        translated_text = translate_mymemory(english_text, target_lang)
-        
+#         translated_text = translate_mymemory(english_text, target_lang)
+        translated_text = english_text
+
         if translated_text:
             existing_props[key] = translated_text
             translated_count += 1
@@ -144,7 +144,8 @@ def update_language_file(lang_code: str) -> Tuple[int, int]:
     return translated_count, failed_count
 
 def main():
-    target_langs = ['cs', 'de', 'es', 'fi', 'fr', 'it', 'ja', 'ko', 'ky', 'lt', 'nl', 'pl', 'pt_BR', 'pt_PT', 'ru', 'sv', 'tr', 'uk', 'zh_CN', 'zh_TW']
+    target_langs = ['cs', 'de', 'es', 'fi', 'fr', 'it', 'ja', 'ko', 'ky', 'lt', 'nl', 'pl', 'pt_BR', 'pt_PT', 'ru', 'sv', 'tr', 'uk', 'zh_CN', 'zh_TW',
+    'am', 'ar', 'bn', 'yo', 'bg','sl','el','fa','hr', 'ku',  'sr', 'sw', 'hi','jv','ro','vi', 'tl', 'th', 'my']
 
     print("Starting translation process...")
     print(f"Target languages: {', '.join(target_langs)}")
